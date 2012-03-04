@@ -28,7 +28,8 @@ import Paths_snap_extras
 
 
 -------------------------------------------------------------------------------
--- | Initialize all the 'Snap.Extras' functionality in your Snap app
+-- | Initialize all the 'Snap.Extras' functionality in your Snap app.
+-- Currently, we don't need to keep any state and simply return ().
 initExtras :: HasHeist b => Lens b (Snaplet SessionManager) -> SnapletInit b ()
 initExtras session = 
   makeSnaplet 
