@@ -1,0 +1,37 @@
+Name:                snap-extras
+Version:             0.1
+License:             BSD3
+License-file:        LICENSE
+Author:              Ozgun Ataman
+Maintainer:          ozataman@gmail.com
+Category:            Web
+Build-type:          Simple
+Cabal-version:       >=1.2
+
+
+Library
+  -- Modules exported by the library.
+  Exposed-modules:     
+    Snap.Extras
+    Snap.Extras.CoreUtils
+    Snap.Extras.TextUtils
+    Snap.Extras.JSON
+    Snap.Extras.FlashNotice
+    Snap.Extras.SpliceUtils
+
+  hs-source-dirs: src
+  Build-depends:
+      base
+    , aeson >= 0.6
+    , snap-core >= 0.7
+    , snap >= 0.7
+    , heist >= 0.8
+    , xmlhtml >= 0.1.6
+    , bytestring
+    , text
+    , safe
+    , data-lens >= 2.0
+    , transformers
+  
+  -- Other-modules:       
+  
