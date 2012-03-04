@@ -21,6 +21,7 @@ import Snap.Extras.TextUtils
 import Snap.Extras.JSON
 import Snap.Extras.FlashNotice
 import Snap.Extras.SpliceUtils
+import Snap.Extras.FormUtils
 -------------------------------------------------------------------------------
 import Paths_snap_extras
 -------------------------------------------------------------------------------
