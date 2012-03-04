@@ -21,12 +21,14 @@ Library
     Snap.Extras.JSON
     Snap.Extras.FlashNotice
     Snap.Extras.SpliceUtils
+    Snap.Extras.FormUtils
   other-modules:
     Paths_snap_extras
 
   hs-source-dirs: src
   Build-depends:
       base
+    , containers
     , aeson >= 0.6
     , snap-core >= 0.7
     , snap >= 0.7
@@ -37,6 +39,10 @@ Library
     , safe
     , data-lens >= 2.0
     , transformers
+    , blaze-html
+    , digestive-functors
+    , digestive-functors-blaze
+    , digestive-functors-snap
   
   -- Other-modules:       
   
