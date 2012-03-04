@@ -1,9 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Snap.Extras.JSON
-    ( getBoundedJSON
+    ( 
+    -- * Parsing JSON from Request Body
+      getBoundedJSON
     , reqBoundedJSON
     , reqJSON
+    -- * Sending JSON Data
+    , writeJSON
     ) where
     
 
@@ -55,3 +60,11 @@ getBoundedJSON n = do
                 A.Error e -> Left e
                 A.Success a -> Right a
 
+
+-------------------------------------------------------------------------------
+-- | Set MIME to 'application/json' and write given object into
+-- 'Response' body.
+writeJSON :: (MonadSnap m, ToJSON a) => a -> m ()
+writeJSON a = do
+  jsonResponse
+  writeLBS . encode $ a
