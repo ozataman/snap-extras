@@ -31,6 +31,7 @@ reqJSON = reqBoundedJSON 50000
 reqBoundedJSON 
     :: (MonadSnap m, FromJSON a)
     => Int64
+    -- ^ Maximum size in bytes
     -> m a
 reqBoundedJSON n = do
   res <- getBoundedJSON n
@@ -44,6 +45,7 @@ reqBoundedJSON n = do
 getBoundedJSON 
     :: (MonadSnap m, FromJSON a) 
     => Int64 
+    -- ^ Maximum size in bytes
     -> m (Either String a)
 getBoundedJSON n = do
   bodyVal <- A.decode `fmap` readRequestBody n
