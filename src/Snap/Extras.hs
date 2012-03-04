@@ -6,6 +6,7 @@ module Snap.Extras
     , module Snap.Extras.JSON
     , module Snap.Extras.FlashNotice
     , module Snap.Extras.SpliceUtils
+    , module Snap.Extras.FormUtils
     , initExtras
     ) where
 
