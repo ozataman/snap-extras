@@ -29,9 +29,9 @@ import           Text.XmlHtml
 -- for examples.
 initFlashNotice 
     :: HasHeist b 
-    => Lens v (Snaplet SessionManager) -> Initializer b v ()
+    => Lens b (Snaplet SessionManager) -> Initializer b v ()
 initFlashNotice session = do
-  addTemplates "resources/templates"
+  addTemplatesAt "" "resources/templates"
   addSplices [("flash", flashSplice session)]
 
 
@@ -64,16 +64,16 @@ flashError session msg = withSession session $ with session $ setInSession "_err
 --
 -- Ex: <flash type='warning'/>
 -- Ex: <flash type='success'/>
-flashSplice :: Lens v (Snaplet SessionManager) -> SnapletSplice b v
+flashSplice :: Lens b (Snaplet SessionManager) -> SnapletSplice b v
 flashSplice session = do
   typ <- liftHeist $ liftM (getAttribute "type") getParamNode
   let typ' = maybe "warning" id typ
   let k = T.concat ["_", typ']
-  msg <- liftHandler $ with session $ getFromSession k
+  msg <- liftHandler $ withTop session $ getFromSession k
   case msg of 
     Nothing -> liftHeist $ return []
     Just msg' -> do
-      liftHandler $ with session $ deleteFromSession k >> commitSession
+      liftHandler $ withTop session $ deleteFromSession k >> commitSession
       liftHeist $ callTemplateWithText "_flash"
            [ ("type", typ') , ("message", msg') ]
-    
+

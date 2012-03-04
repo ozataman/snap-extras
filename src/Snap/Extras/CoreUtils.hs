@@ -39,10 +39,12 @@ finishEarly code str = do
 badReq :: MonadSnap m => ByteString -> m b 
 badReq = finishEarly 400 
 
+
 -------------------------------------------------------------------------------
 -- | Finish early with error code 404
 notFound :: MonadSnap m => ByteString -> m b 
 notFound = finishEarly 404
+
 
 -------------------------------------------------------------------------------
 -- | Finish early with error code 500
@@ -51,22 +53,27 @@ serverError = finishEarly 500
 
 
 -------------------------------------------------------------------------------
+-- | Mark response as 'text/plain'
 plainResponse :: MonadSnap m => m ()
 plainResponse = modifyResponse $ setHeader "Content-Type" "text/plain"
 
 
 -------------------------------------------------------------------------------
+-- | Mark response as 'application/json'
 jsonResponse :: MonadSnap m => m ()
 jsonResponse = modifyResponse $ setHeader "Content-Type" "application/json"
 
 
 -------------------------------------------------------------------------------
+-- | Mark response as 'application/javascript'
 jsResponse :: MonadSnap m => m ()
 jsResponse = modifyResponse $ setHeader "Content-Type" "application/javascript"
 
 
 ------------------------------------------------------------------------------
--- | Easy Error log logger
+-- | Easier debug logging into error log. First argument is a
+-- category/namespace and the second argument is anything that has a
+-- 'Show' instance.
 easyLog :: (Show t, MonadSnap m) => String -> t -> m ()
 easyLog k v = logError . B.pack $ ("[Debug] " ++ k ++ ": " ++ show v)
 

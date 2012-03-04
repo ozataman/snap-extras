@@ -9,6 +9,9 @@ Build-type:          Simple
 Cabal-version:       >=1.2
 
 
+data-files:
+  resources/templates/*.tpl
+
 Library
   -- Modules exported by the library.
   Exposed-modules:     
@@ -18,6 +21,8 @@ Library
     Snap.Extras.JSON
     Snap.Extras.FlashNotice
     Snap.Extras.SpliceUtils
+  other-modules:
+    Paths_snap_extras
 
   hs-source-dirs: src
   Build-depends:
