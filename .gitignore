@@ -1,2 +1,4 @@
 dist
 .DS*
+cabal-dev
+dist
