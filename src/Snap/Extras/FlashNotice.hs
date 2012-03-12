@@ -31,7 +31,6 @@ initFlashNotice
     :: HasHeist b 
     => Lens b (Snaplet SessionManager) -> Initializer b v ()
 initFlashNotice session = do
-  addTemplatesAt "" "resources/templates"
   addSplices [("flash", flashSplice session)]
 
 

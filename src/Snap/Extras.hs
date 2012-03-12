@@ -15,13 +15,15 @@ import Data.Lens.Common
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Session
+import System.FilePath.Posix
 -------------------------------------------------------------------------------
 import Snap.Extras.CoreUtils
-import Snap.Extras.TextUtils
-import Snap.Extras.JSON
 import Snap.Extras.FlashNotice
-import Snap.Extras.SpliceUtils
 import Snap.Extras.FormUtils
+import Snap.Extras.JSON
+import Snap.Extras.SpliceUtils
+import Snap.Extras.Tabs
+import Snap.Extras.TextUtils
 -------------------------------------------------------------------------------
 import Paths_snap_extras
 -------------------------------------------------------------------------------
