@@ -65,6 +65,10 @@ mkTabs klass ts = do
 --
 -- If the tab is currently active, the li tag will get a class of
 -- \'active\'.
+--
+-- Make sure to provide a trailing / when indicating URLs as snap
+-- context paths contain it and active tab checks will be confused
+-- without it.
 tab 
     :: Text 
     -- ^ Target URL for tab
@@ -78,7 +82,7 @@ tab
 tab url text attr md context = X.Element "li" attr' [link url text]
   where 
     cur = case md of
-            TAMExactMatch -> url == T.init context
+            TAMExactMatch -> url == context
             TAMPrefixMatch -> url `T.isPrefixOf` context
             TAMInfixMatch -> url `T.isInfixOf` context
     attr' = if cur
