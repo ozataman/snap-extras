@@ -5,6 +5,7 @@ module Snap.Extras.JSON
     ( 
     -- * Parsing JSON from Request Body
       getBoundedJSON
+    , getJSON
     , reqBoundedJSON
     , reqJSON
     -- * Sending JSON Data
@@ -43,6 +44,13 @@ reqBoundedJSON n = do
   case res of
     Left e -> badReq $ B.pack e
     Right a -> return a
+
+
+-------------------------------------------------------------------------------
+-- | Try to parse request body as JSON with a default max size of
+-- 50000.
+getJSON :: (MonadSnap m, A.FromJSON a) => m (Either String a)
+getJSON = getBoundedJSON 50000
 
 
 -------------------------------------------------------------------------------
