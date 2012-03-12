@@ -7,6 +7,7 @@ module Snap.Extras
     , module Snap.Extras.FlashNotice
     , module Snap.Extras.SpliceUtils
     , module Snap.Extras.FormUtils
+    , module Snap.Extras.Tabs
     , initExtras
     ) where
 
