@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-| 
 
     Purpose of this module is to provide a simple, functional way to

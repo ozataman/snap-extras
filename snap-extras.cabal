@@ -22,6 +22,7 @@ Library
     Snap.Extras.FlashNotice
     Snap.Extras.SpliceUtils
     Snap.Extras.FormUtils
+    Snap.Extras.Tabs
   other-modules:
     Paths_snap_extras
 
