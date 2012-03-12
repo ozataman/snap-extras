@@ -36,4 +36,6 @@ initExtras session =
     "Snap Extras" 
     "Collection of utilities for web applications" 
     (Just getDataDir) $ do
+      addTemplatesAt "" . (</> "resources/templates") =<< getSnapletFilePath
       initFlashNotice session
+      addUtilSplices

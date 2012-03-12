@@ -55,3 +55,27 @@ paramSplice = do
     Nothing -> return Nothing
   return $ maybe [] ((:[]) . TextNode . T.decodeUtf8) val
     
+
+-------------------------------------------------------------------------------
+-- | Splice helper for when you're rendering a select element
+selectSplice
+    :: Monad m 
+    => Text
+    -- ^ A name for the select element
+    -> Text
+    -- ^ An id for the select element
+    -> [(Text, Text)]
+    -- ^ value, shown text pairs
+    -> Maybe Text
+    -- ^ Default value
+    -> Splice m
+selectSplice nm fid xs defv = 
+    callTemplate "_select" 
+      [("options", opts), ("name", textSplice nm), ("id", textSplice fid)]
+    where 
+      opts = mapSplices gen xs
+      gen (val,txt) = runChildrenWith
+        [ ("val", textSplice val)
+        , ("text", textSplice txt)
+        , ("ifSelected", ifSplice $ maybe False (== val) defv)
+        , ("ifNotSelected", ifSplice $ maybe True (/= val) defv) ]
