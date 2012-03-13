@@ -6,6 +6,7 @@ module Snap.Extras.SpliceUtils
     , paramSplice
     , utilSplices
     , addUtilSplices
+    , selectSplice
     ) where
 
 -------------------------------------------------------------------------------
