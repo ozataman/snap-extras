@@ -42,3 +42,4 @@ initExtras session =
       addTemplatesAt "" . (</> "resources/templates") =<< getSnapletFilePath
       initFlashNotice session
       addUtilSplices
+      initTabs

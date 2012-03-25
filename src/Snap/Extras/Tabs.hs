@@ -7,7 +7,13 @@
 -}
 
 module Snap.Extras.Tabs
-    ( TabActiveMode (..)
+    ( 
+    -- * Define Tabs in DOM via Heist
+      initTabs
+    , tabsSplice
+    
+    -- * Define Tabs in Haskell
+    , TabActiveMode (..)
     , Tab
     , mkTabs
     , tab
@@ -21,9 +27,70 @@ import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
 import           Snap.Core
 import           Text.Templating.Heist
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
+import           Text.Templating.Heist
 import           Text.XmlHtml
 import qualified Text.XmlHtml              as X
 -------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------------------
+initTabs :: HasHeist b => Initializer b v ()
+initTabs = do
+  addSplices [ ("tabs", liftHeist tabsSplice) ]
+
+
+                              -------------------
+                              -- Splice-Driven --
+                              -------------------
+
+
+-------------------------------------------------------------------------------
+tabsSplice :: MonadSnap m => Splice m
+tabsSplice = do
+  context <- lift $ (T.decodeUtf8 . rqContextPath) `liftM` getRequest
+  let bind = bindSplices [("tab", tabSplice context)]
+  n <- getParamNode
+  case n of
+    Element t attrs ch -> localTS bind $ runNodeList [X.Element "ul" attrs ch]
+    _ -> error "tabs tag has to be an Element"
+
+
+
+-------------------------------------------------------------------------------
+tabSplice :: MonadSnap m => Text -> Splice m
+tabSplice context = do
+  n@(Element t attrs ch) <- getParamNode
+  let ps = do
+        m <- wErr "tab must specify a 'match' attribute" $ lookup "match" attrs
+        url <- wErr "tabs must specify a 'url' attribute" $ getAttribute "url" n
+        m' <- return $ case m of
+          "Exact" -> url == context
+          "Prefix" -> url `T.isPrefixOf` context
+          "Infix" -> url `T.isInfixOf` context
+          "None" -> False
+          _ -> error "Tab: Unknown match type"
+        txt <- return $ nodeText n
+        return (url, txt, m')
+  case ps of
+    Left e -> error $ "Tab error: " ++ e
+    Right (url, txt, match) -> do
+      let attr' = if match then ("class", "active") : attrs
+                    else attrs
+      return $ [X.Element "li" attr' [link url txt]]
+
+
+-------------------------------------------------------------------------------
+wErr err m = maybe (Left err) Right m
+
+
+                             --------------------
+                             -- Haskell-Driven --
+                             --------------------
+
+
 
 
 
@@ -36,6 +103,7 @@ data TabActiveMode
   -- ^ Only the prefix needs to match current url
   | TAMInfixMatch
   -- ^ A sub-set of the current url has to match
+  | TAMDontMatch
 
 
 -------------------------------------------------------------------------------
@@ -85,6 +153,7 @@ tab url text attr md context = X.Element "li" attr' [link url text]
             TAMExactMatch -> url == context
             TAMPrefixMatch -> url `T.isPrefixOf` context
             TAMInfixMatch -> url `T.isInfixOf` context
+            TAMDontMatch -> False
     attr' = if cur
             then ("class", klass) : attr
             else attr
