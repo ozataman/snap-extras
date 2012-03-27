@@ -57,6 +57,28 @@ paramSplice = do
   return $ maybe [] ((:[]) . TextNode . T.decodeUtf8) val
     
 
+
+-------------------------------------------------------------------------------
+-- | Assume text are contains the name of a splice as Text.
+--
+-- This is helpful when you pass a default value to digestive-functors
+-- by putting the name of a splice as the value of a textarea tag.
+--
+-- > heistLocal runTextAreas $ render "joo/index"
+runTextAreas :: Monad m => HeistState m -> HeistState m
+runTextAreas = bindSplices [ ("textarea", ta)]
+ where
+   ta = do
+     hs <- getTS
+     n@(Element t ats _) <- getParamNode
+     let nm = nodeText n
+     case lookupSplice nm hs of
+       Just spl -> do
+         ns <- spl
+         return [Element t ats ns]
+       Nothing -> return $ [Element t ats []]
+
+
 -------------------------------------------------------------------------------
 -- | Splice helper for when you're rendering a select element
 selectSplice
