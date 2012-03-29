@@ -72,14 +72,14 @@ tabSplice context = do
           "Infix" -> url `T.isInfixOf` context
           "None" -> False
           _ -> error "Tab: Unknown match type"
-        txt <- return $ nodeText n
-        return (url, txt, m')
+        ch <- return $ childNodes n
+        return (url, ch, m')
   case ps of
     Left e -> error $ "Tab error: " ++ e
-    Right (url, txt, match) -> do
+    Right (url, ch, match) -> do
       let attr' = if match then ("class", "active") : attrs
                     else attrs
-      return $ [X.Element "li" attr' [link url txt]]
+      return $ [X.Element "li" attr' [link url ch]]
 
 
 -------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ tab
     -> TabActiveMode 
     -- ^ A 'TabActiveMode' for this tab
     -> Tab
-tab url text attr md context = X.Element "li" attr' [link url text]
+tab url text attr md context = X.Element "li" attr' [tlink url text]
   where 
     cur = case md of
             TAMExactMatch -> url == context
@@ -163,5 +163,10 @@ tab url text attr md context = X.Element "li" attr' [link url text]
 
 
 -------------------------------------------------------------------------------
-link :: Text -> Text -> Node
-link target text = X.Element "a" [("href", target)] [X.TextNode text]
+tlink :: Text -> Text -> Node
+tlink target text = X.Element "a" [("href", target)] [X.TextNode text]
+
+
+-------------------------------------------------------------------------------
+link :: Text -> [Node] -> Node
+link target ch = X.Element "a" [("href", target)] ch
