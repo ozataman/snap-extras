@@ -12,6 +12,8 @@ module Snap.Extras.CoreUtils
     , easyLog
     , getParam'
     , reqParam
+    , readParam
+    , readMayParam
     ) where
 
 -------------------------------------------------------------------------------
@@ -19,6 +21,7 @@ import Snap.Core
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Control.Monad
+import Safe
 -------------------------------------------------------------------------------
 
 
@@ -93,3 +96,18 @@ reqParam s = do
   p <- getParam s
   maybe (badReq $ B.concat ["Required parameter ", s, " is missing."]) return p
  
+
+-------------------------------------------------------------------------------
+-- | Read a parameter from request. Be sure it is readable if it's
+-- there, or else this will raise an error.
+readParam :: (MonadSnap m, Read a) => ByteString -> m (Maybe a)
+readParam k = fmap (readNote "readParam failed" . B.unpack) `fmap` getParam k
+
+
+-------------------------------------------------------------------------------
+-- | Try to read a parameter from request. Computation may fail
+-- because the param is not there, or because it can't be read.
+readMayParam :: (MonadSnap m, Read a) => ByteString -> m (Maybe a)
+readMayParam k = do 
+  p <- getParam k
+  return $ readMay . B.unpack =<< p
