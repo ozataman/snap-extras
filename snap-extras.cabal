@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.1.5
+Version:             0.1.7
 Synopsis:            A collection of useful helpers and combinators for Snap web applications.
 License:             BSD3
 License-file:        LICENSE
@@ -33,9 +33,9 @@ Library
     , containers
     , filepath
     , aeson >= 0.6
-    , snap-core >= 0.7 && < 0.9
-    , snap >= 0.7 && < 0.9
-    , heist >= 0.7 && < 0.9
+    , snap-core >= 0.7
+    , snap >= 0.7
+    , heist >= 0.7
     , xmlhtml >= 0.1.6
     , bytestring
     , text
