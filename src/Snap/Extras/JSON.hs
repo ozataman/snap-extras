@@ -8,6 +8,8 @@ module Snap.Extras.JSON
     , getJSON
     , reqBoundedJSON
     , reqJSON
+    , getJSONField
+    , reqJSONField
     -- * Sending JSON Data
     , writeJSON
     ) where
@@ -15,8 +17,9 @@ module Snap.Extras.JSON
 
 -------------------------------------------------------------------------------
 import           Data.Aeson            as A
-import Data.Int
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as LB
+import           Data.Int
 import           Snap.Core
 -------------------------------------------------------------------------------
 import           Snap.Extras.CoreUtils
@@ -67,6 +70,38 @@ getBoundedJSON n = do
     Just v -> case A.fromJSON v of
                 A.Error e -> Left e
                 A.Success a -> Right a
+
+
+-------------------------------------------------------------------------------
+-- | Get JSON data from the given Param field
+getJSONField 
+    :: (MonadSnap m, FromJSON a)
+    => B.ByteString
+    -> m (Either String a)
+getJSONField fld = do
+  val <- getParam fld
+  return $ case val of
+    Nothing -> Left $ "Cant find field " ++ B.unpack fld
+    Just val' ->
+      case A.decode (LB.fromChunks . return $ val') of
+        Nothing -> Left $ "Can't decode JSON data in field " ++ B.unpack fld
+        Just v -> 
+          case A.fromJSON v of
+            A.Error e -> Left e
+            A.Success a -> Right a
+
+
+-------------------------------------------------------------------------------
+-- | Force the JSON value from field. Similar to 'getJSONField'
+reqJSONField 
+    :: (MonadSnap m, FromJSON a)
+    => B.ByteString
+    -> m a
+reqJSONField fld = do
+  res <- getJSONField fld
+  case res of
+    Left e -> badReq $ B.pack e
+    Right a -> return a
 
 
 -------------------------------------------------------------------------------
