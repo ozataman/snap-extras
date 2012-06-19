@@ -1,6 +1,6 @@
 Name:                snap-extras
 Version:             0.1.7
-Synopsis:            A collection of useful helpers and combinators for Snap web applications.
+Synopsis:            A collection of useful helpers for Snap web applications.
 License:             BSD3
 License-file:        LICENSE
 Author:              Ozgun Ataman
