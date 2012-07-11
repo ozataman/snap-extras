@@ -13,11 +13,15 @@ module Snap.Extras.SpliceUtils
 -------------------------------------------------------------------------------
 import           Control.Monad
 import           Control.Monad.Trans.Class
+import qualified Data.Foldable         as F
+import           Data.List
 import           Data.Text             (Text)
+import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as T
-import           Snap.Core
-import           Snap.Snaplet
+import           Snap
 import           Snap.Snaplet.Heist
+import           System.Directory.Tree
+import           System.FilePath
 import           Text.Templating.Heist
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
@@ -103,3 +107,33 @@ selectSplice nm fid xs defv =
         , ("text", textSplice txt)
         , ("ifSelected", ifSplice $ maybe False (== val) defv)
         , ("ifNotSelected", ifSplice $ maybe True (/= val) defv) ]
+
+
+------------------------------------------------------------------------------
+-- | Searches a directory on disk and all its subdirectories for all files
+-- with names that don't begin with an underscore and end with a .js
+-- extension.  It then returns script tags for each of these files.
+--
+-- You can use this function to create a splice:
+--     ("staticscripts", scriptsSplice "static/js" "/")
+--
+-- Then when you use the `<staticscripts/>` tag in your templates, it will
+-- automatically include all the javascript code in the static/js directory.
+scriptsSplice :: MonadIO m
+              => FilePath
+              -- ^ Path to the directory on disk holding the javascript files.
+              -> String
+              -- ^ A prefix to add to the src attribute of each script tag.
+              -> m [Node]
+scriptsSplice dir prefix = do
+    tree <- liftIO $ build dir
+    let files = F.foldMap ((:[]) . fst) $ zipPaths $ "" :/ free tree
+        scripts = filter visibleScripts files
+    return $ concat $ map includeJavascript scripts
+  where
+    visibleScripts fname =
+        isSuffixOf ".js" fname && not (isPrefixOf "_" (takeFileName fname))
+    includeJavascript script =
+        [Element "script" [("src", T.pack $ prefix ++ script)] []]
+
+
