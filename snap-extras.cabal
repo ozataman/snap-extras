@@ -34,22 +34,23 @@ Library
 
   hs-source-dirs: src
   Build-depends:
-      base >= 4 && < 5
-    , containers
-    , filepath
-    , aeson >= 0.6
-    , snap-core >= 0.7
-    , snap >= 0.7
-    , heist >= 0.7
-    , xmlhtml >= 0.1.6
-    , bytestring
-    , text
-    , safe
-    , data-lens >= 2.0
-    , transformers
+      aeson >= 0.6
+    , base >= 4 && < 5
     , blaze-html
+    , bytestring
+    , containers
+    , data-lens >= 2.0
     , digestive-functors >= 0.3
     , digestive-functors-snap >= 0.3
+    , directory-tree >= 0.10 && < 0.11
+    , filepath
+    , heist >= 0.7
+    , safe
+    , snap >= 0.7
+    , snap-core >= 0.7
+    , text
+    , transformers
+    , xmlhtml >= 0.1.6
   
   -- Other-modules:       
   
