@@ -8,6 +8,7 @@ module Snap.Extras.SpliceUtils
     , addUtilSplices
     , selectSplice
     , runTextAreas
+    , scriptsSplice
     ) where
 
 -------------------------------------------------------------------------------
