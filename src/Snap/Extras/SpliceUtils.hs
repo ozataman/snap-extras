@@ -116,10 +116,11 @@ selectSplice nm fid xs defv =
 -- extension.  It then returns script tags for each of these files.
 --
 -- You can use this function to create a splice:
---     ("staticscripts", scriptsSplice "static/js" "/")
 --
--- Then when you use the `<staticscripts/>` tag in your templates, it will
--- automatically include all the javascript code in the static/js directory.
+-- > ("staticscripts", scriptsSplice "static/js" "/")
+--
+-- Then when you use the @\<staticscripts/\>@ tag in your templates, it will
+-- automatically include all the javascript code in the @static/js@ directory.
 scriptsSplice :: MonadIO m
               => FilePath
               -- ^ Path to the directory on disk holding the javascript files.
