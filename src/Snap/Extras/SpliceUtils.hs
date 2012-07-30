@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Snap.Extras.SpliceUtils
     ( ifSplice
@@ -9,16 +9,18 @@ module Snap.Extras.SpliceUtils
     , selectSplice
     , runTextAreas
     , scriptsSplice
+    , siteFlagSplice
     ) where
 
 -------------------------------------------------------------------------------
 import           Control.Monad
 import           Control.Monad.Trans.Class
-import qualified Data.Foldable         as F
+import qualified Data.Configurator         as C
+import qualified Data.Foldable             as F
 import           Data.List
-import           Data.Text             (Text)
-import qualified Data.Text             as T
-import qualified Data.Text.Encoding    as T
+import           Data.Text                 (Text)
+import qualified Data.Text                 as T
+import qualified Data.Text.Encoding        as T
 import           Snap
 import           Snap.Snaplet.Heist
 import           System.Directory.Tree
@@ -37,15 +39,17 @@ addUtilSplices = addSplices utilSplices
 -------------------------------------------------------------------------------
 -- | A list of splices offered in this module
 utilSplices :: [(Text, SnapletSplice b v)]
-utilSplices = 
-  [("rqparam", liftHeist paramSplice)]
+utilSplices =
+  [ ("rqparam", liftHeist paramSplice)
+  , ("flag", siteFlagSplice)
+  ]
 
 
 -------------------------------------------------------------------------------
 -- | Run the splice contents if given condition is True, make splice
 -- disappear if not.
 ifSplice :: Monad m => Bool -> Splice m
-ifSplice cond = 
+ifSplice cond =
     case cond of
       False -> return []
       True -> runChildren
@@ -61,7 +65,7 @@ paramSplice = do
     Just at' -> lift . getParam $ T.encodeUtf8 at'
     Nothing -> return Nothing
   return $ maybe [] ((:[]) . TextNode . T.decodeUtf8) val
-    
+
 
 
 -------------------------------------------------------------------------------
@@ -88,7 +92,7 @@ runTextAreas = bindSplices [ ("textarea", ta)]
 -------------------------------------------------------------------------------
 -- | Splice helper for when you're rendering a select element
 selectSplice
-    :: Monad m 
+    :: Monad m
     => Text
     -- ^ A name for the select element
     -> Text
@@ -98,10 +102,10 @@ selectSplice
     -> Maybe Text
     -- ^ Default value
     -> Splice m
-selectSplice nm fid xs defv = 
-    callTemplate "_select" 
+selectSplice nm fid xs defv =
+    callTemplate "_select"
       [("options", opts), ("name", textSplice nm), ("id", textSplice fid)]
-    where 
+    where
       opts = mapSplices gen xs
       gen (val,txt) = runChildrenWith
         [ ("val", textSplice val)
@@ -138,4 +142,31 @@ scriptsSplice dir prefix = do
     includeJavascript script =
         [Element "script" [("src", T.pack $ prefix ++ script)] []]
 
+
+
+-------------------------------------------------------------------------------
+-- | Check to see if the boolean flag named by the "ref" attribute is
+-- present and set to true in snaplet user config file. If so, run
+-- what's inside this splice, if not, simply omit that part.
+--
+-- Example:
+--
+-- > <flag ref="beta-functions-enabled">
+-- > stuff...
+-- > </flag>
+--
+-- This will look for an entry inside your .cfg file:
+--
+-- > beta-functions-enabled = true
+siteFlagSplice :: SnapletSplice b v
+siteFlagSplice = do
+  Element t ats es <- liftHeist getParamNode
+  conf <- liftHandler getSnapletUserConfig
+  liftHeist $ case lookup "ref" ats of
+    Nothing -> return []
+    Just flag -> do
+      res <- liftIO $ C.lookup conf flag
+      case res of
+        Just True -> return es
+        _         -> return []
 
