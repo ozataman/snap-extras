@@ -66,20 +66,20 @@ tabSplice context = do
   let ps = do
         m <- wErr "tab must specify a 'match' attribute" $ lookup "match" attrs
         url <- wErr "tabs must specify a 'url' attribute" $ getAttribute "url" n
-        m' <- return $ case m of
-          "Exact" -> url == context
-          "Prefix" -> url `T.isPrefixOf` context
-          "Infix" -> url `T.isInfixOf` context
-          "None" -> False
-          _ -> error "Tab: Unknown match type"
+        m' <- case m of
+          "Exact" -> Right $ url == context
+          "Prefix" -> Right $ url `T.isPrefixOf` context
+          "Infix" -> Right $ url `T.isInfixOf` context
+          "None" -> Right $ False
+          _ -> Left "Unknown match type"
         ch <- return $ childNodes n
         return (url, ch, m')
   case ps of
     Left e -> error $ "Tab error: " ++ e
     Right (url, ch, match) -> do
-      let attr' = if match then ("class", "active") : attrs
-                    else attrs
-      return $ [X.Element "li" attr' [link url ch]]
+      let attr' = if match then ("class", "active") : attrs else attrs
+          a = X.Element "a" (("href", url) : attrs) ch
+      return $ [X.Element "li" attr' [a]]
 
 
 -------------------------------------------------------------------------------
