@@ -9,7 +9,7 @@ module Snap.Extras.SpliceUtils
     , selectSplice
     , runTextAreas
     , scriptsSplice
-    , siteFlagSplice
+    , ifFlagSplice
     ) where
 
 -------------------------------------------------------------------------------
@@ -41,7 +41,6 @@ addUtilSplices = addSplices utilSplices
 utilSplices :: [(Text, SnapletSplice b v)]
 utilSplices =
   [ ("rqparam", liftHeist paramSplice)
-  , ("flag", siteFlagSplice)
   ]
 
 
@@ -158,8 +157,8 @@ scriptsSplice dir prefix = do
 -- This will look for an entry inside your .cfg file:
 --
 -- > beta-functions-enabled = true
-siteFlagSplice :: SnapletSplice b v
-siteFlagSplice = do
+ifFlagSplice :: SnapletSplice b v
+ifFlagSplice = do
   Element t ats es <- liftHeist getParamNode
   conf <- liftHandler getSnapletUserConfig
   liftHeist $ case lookup "ref" ats of
@@ -169,4 +168,3 @@ siteFlagSplice = do
       case res of
         Just True -> return es
         _         -> return []
-

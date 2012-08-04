@@ -51,6 +51,7 @@ Library
     , text
     , transformers
     , xmlhtml >= 0.1.6
+    , configurator >= 0.2
   
   -- Other-modules:       
   
