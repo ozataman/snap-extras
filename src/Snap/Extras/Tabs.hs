@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-| 
+{-|
 
     Purpose of this module is to provide a simple, functional way to
     define tabs in Snap applications.
@@ -7,11 +7,11 @@
 -}
 
 module Snap.Extras.Tabs
-    ( 
+    (
     -- * Define Tabs in DOM via Heist
       initTabs
     , tabsSplice
-    
+
     -- * Define Tabs in Haskell
     , TabActiveMode (..)
     , Tab
@@ -26,9 +26,9 @@ import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
 import           Snap.Core
-import           Text.Templating.Heist
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import           Text.Templating.Heist
 import           Text.Templating.Heist
 import           Text.XmlHtml
 import qualified Text.XmlHtml              as X
@@ -50,7 +50,7 @@ initTabs = do
 -------------------------------------------------------------------------------
 tabsSplice :: MonadSnap m => Splice m
 tabsSplice = do
-  context <- lift $ (T.decodeUtf8 . rqContextPath) `liftM` getRequest
+  context <- lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
   let bind = bindSplices [("tab", tabSplice context)]
   n <- getParamNode
   case n of
@@ -114,17 +114,17 @@ type Tab = Text -> Node
 -------------------------------------------------------------------------------
 -- | Make tabs from tab definitions. Use the 'tab' combinator to
 -- define individual options.
-mkTabs 
-    :: MonadSnap m 
-    => Text 
+mkTabs
+    :: MonadSnap m
+    => Text
     -- ^ A class to be given to the parent ul tag
-    -> [Tab] 
+    -> [Tab]
     -- ^ List of tabs in order
     -> Splice m
 mkTabs klass ts = do
   p <- lift $ (T.decodeUtf8 . rqContextPath) `liftM` getRequest
   return [X.Element "ul" [("class", klass)] (map ($ p) ts)]
-  
+
 
 -------------------------------------------------------------------------------
 -- | Tab item constructor to be used with 'mkTabs'. Just supply the
@@ -137,18 +137,18 @@ mkTabs klass ts = do
 -- Make sure to provide a trailing / when indicating URLs as snap
 -- context paths contain it and active tab checks will be confused
 -- without it.
-tab 
-    :: Text 
+tab
+    :: Text
     -- ^ Target URL for tab
-    -> Text 
+    -> Text
     -- ^ A text/label for tab
-    -> [(Text, Text)] 
+    -> [(Text, Text)]
     -- ^ A list of attributes as key=val
-    -> TabActiveMode 
+    -> TabActiveMode
     -- ^ A 'TabActiveMode' for this tab
     -> Tab
 tab url text attr md context = X.Element "li" attr' [tlink url text]
-  where 
+  where
     cur = case md of
             TAMExactMatch -> url == context
             TAMPrefixMatch -> url `T.isPrefixOf` context
