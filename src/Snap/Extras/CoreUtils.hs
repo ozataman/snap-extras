@@ -111,3 +111,26 @@ readMayParam :: (MonadSnap m, Read a) => ByteString -> m (Maybe a)
 readMayParam k = do 
   p <- getParam k
   return $ readMay . B.unpack =<< p
+
+
+------------------------------------------------------------------------------
+-- | If the current rqURI does not have a trailing slash, then redirect to the
+-- same page with a slash added.
+dirify :: MonadSnap m => m ()
+dirify = do
+    uri <- withRequest (return . rqURI)
+    if B.length uri > 1 && B.last uri /= '/'
+      then redirect (uri `B.append` "/")
+      else return ()
+
+
+------------------------------------------------------------------------------
+-- | If the current rqURI has a trailing slash, then redirect to the same page
+-- with no trailing slash.
+undirify :: MonadSnap m => m ()
+undirify = do
+    uri <- withRequest (return . rqURI)
+    if B.length uri > 1 && B.last uri == '/'
+      then redirect (B.init uri)
+      else return ()
+
