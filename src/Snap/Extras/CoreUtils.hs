@@ -14,6 +14,8 @@ module Snap.Extras.CoreUtils
     , reqParam
     , readParam
     , readMayParam
+    , dirify
+    , undirify
     ) where
 
 -------------------------------------------------------------------------------
