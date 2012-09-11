@@ -28,8 +28,8 @@ import qualified Data.Text.Encoding        as T
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
-import           Text.Templating.Heist
-import           Text.Templating.Heist
+import           Heist
+import           Heist.Interpreted
 import           Text.XmlHtml
 import qualified Text.XmlHtml              as X
 -------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ tabsSplice = do
   let bind = bindSplices [("tab", tabSplice context)]
   n <- getParamNode
   case n of
-    Element t attrs ch -> localTS bind $ runNodeList [X.Element "ul" attrs ch]
+    Element t attrs ch -> localHS bind $ runNodeList [X.Element "ul" attrs ch]
     _ -> error "tabs tag has to be an Element"
 
 

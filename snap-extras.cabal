@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.2.2
+Version:             0.3
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description: This package contains a collection of helper functions
              that come in handy in most practical, real-world
@@ -43,10 +43,11 @@ Library
     , digestive-functors >= 0.3
     , digestive-functors-snap >= 0.3
     , directory-tree >= 0.10 && < 0.11
+    , errors >= 1.3.1 && < 1.4
     , filepath
-    , heist >= 0.7
+    , heist >= 0.10
     , safe
-    , snap >= 0.7
+    , snap >= 0.10
     , snap-core >= 0.7
     , text
     , transformers
@@ -54,4 +55,6 @@ Library
     , configurator >= 0.2
   
   -- Other-modules:       
+
+  ghc-options: -Wall -fwarn-tabs
   

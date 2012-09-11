@@ -18,7 +18,8 @@ import qualified Data.Text             as T
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
-import           Text.Templating.Heist
+import           Heist
+import           Heist.Interpreted
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
 
@@ -63,7 +64,7 @@ flashError session msg = withSession session $ with session $ setInSession "_err
 --
 -- Ex: <flash type='warning'/>
 -- Ex: <flash type='success'/>
-flashSplice :: Lens b (Snaplet SessionManager) -> SnapletSplice b v
+flashSplice :: Lens b (Snaplet SessionManager) -> SnapletISplice b v
 flashSplice session = do
   typ <- liftHeist $ liftM (getAttribute "type") getParamNode
   let typ' = maybe "warning" id typ

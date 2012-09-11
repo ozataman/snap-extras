@@ -25,7 +25,8 @@ import           Snap
 import           Snap.Snaplet.Heist
 import           System.Directory.Tree
 import           System.FilePath
-import           Text.Templating.Heist
+import           Heist
+import           Heist.Interpreted
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ addUtilSplices = addSplices utilSplices
 
 -------------------------------------------------------------------------------
 -- | A list of splices offered in this module
-utilSplices :: [(Text, SnapletSplice b v)]
+utilSplices :: [(Text, SnapletISplice b v)]
 utilSplices =
   [ ("rqparam", liftHeist paramSplice)
   ]
@@ -78,7 +79,7 @@ runTextAreas :: Monad m => HeistState m -> HeistState m
 runTextAreas = bindSplices [ ("textarea", ta)]
  where
    ta = do
-     hs <- getTS
+     hs <- getHS
      n@(Element t ats _) <- getParamNode
      let nm = nodeText n
      case lookupSplice nm hs of
@@ -157,7 +158,7 @@ scriptsSplice dir prefix = do
 -- This will look for an entry inside your .cfg file:
 --
 -- > beta-functions-enabled = true
-ifFlagSplice :: SnapletSplice b v
+ifFlagSplice :: SnapletISplice b v
 ifFlagSplice = do
   Element t ats es <- liftHeist getParamNode
   conf <- liftHandler getSnapletUserConfig

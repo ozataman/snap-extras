@@ -33,13 +33,16 @@ import Paths_snap_extras
 -------------------------------------------------------------------------------
 -- | Initialize all the 'Snap.Extras' functionality in your Snap app.
 -- Currently, we don't need to keep any state and simply return ().
-initExtras :: HasHeist b => Lens b (Snaplet SessionManager) -> SnapletInit b ()
-initExtras session = 
+initExtras :: HasHeist b
+           => Snaplet (Heist b)
+           -> Lens b (Snaplet SessionManager)
+           -> SnapletInit b ()
+initExtras heistSnaplet session = 
   makeSnaplet 
     "Snap Extras" 
     "Collection of utilities for web applications" 
     (Just getDataDir) $ do
-      addTemplatesAt "" . (</> "resources/templates") =<< getSnapletFilePath
+      addTemplatesAt heistSnaplet "" . (</> "resources/templates") =<< getSnapletFilePath
       initFlashNotice session
       addUtilSplices
       initTabs

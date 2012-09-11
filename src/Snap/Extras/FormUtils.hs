@@ -32,7 +32,7 @@ import           Safe
 import           Snap.Core
 import           Text.Digestive
 import           Text.Digestive.Snap
-import           Text.Templating.Heist
+import           Heist
 -------------------------------------------------------------------------------
 
 
