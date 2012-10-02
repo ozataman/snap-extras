@@ -39,9 +39,9 @@ addUtilSplices = addSplices utilSplices
 
 -------------------------------------------------------------------------------
 -- | A list of splices offered in this module
-utilSplices :: [(Text, SnapletISplice b v)]
+utilSplices :: [(Text, SnapletISplice b)]
 utilSplices =
-  [ ("rqparam", liftHeist paramSplice)
+  [ ("rqparam", paramSplice)
   ]
 
 
@@ -158,11 +158,11 @@ scriptsSplice dir prefix = do
 -- This will look for an entry inside your .cfg file:
 --
 -- > beta-functions-enabled = true
-ifFlagSplice :: SnapletISplice b v
+ifFlagSplice :: SnapletISplice b
 ifFlagSplice = do
-  Element t ats es <- liftHeist getParamNode
-  conf <- liftHandler getSnapletUserConfig
-  liftHeist $ case lookup "ref" ats of
+  Element t ats es <- getParamNode
+  conf <- lift getSnapletUserConfig
+  case lookup "ref" ats of
     Nothing -> return []
     Just flag -> do
       res <- liftIO $ C.lookup conf flag

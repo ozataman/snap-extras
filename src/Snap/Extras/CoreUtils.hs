@@ -14,16 +14,19 @@ module Snap.Extras.CoreUtils
     , reqParam
     , readParam
     , readMayParam
+    , redirectReferer
+    , redirectRefererFunc
     , dirify
     , undirify
     ) where
 
 -------------------------------------------------------------------------------
-import Snap.Core
+import Control.Monad
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
-import Control.Monad
+import Data.Maybe
 import Safe
+import Snap.Core
 -------------------------------------------------------------------------------
 
 
@@ -113,6 +116,23 @@ readMayParam :: (MonadSnap m, Read a) => ByteString -> m (Maybe a)
 readMayParam k = do 
   p <- getParam k
   return $ readMay . B.unpack =<< p
+
+
+------------------------------------------------------------------------------
+-- | Redirects back to the refering page.  If there is no Referer header, then
+-- redirect to /.
+redirectReferer :: MonadSnap m => m b
+redirectReferer = redirectRefererFunc (fromMaybe "/")
+
+
+------------------------------------------------------------------------------
+-- | Redirects back to the refering page.  If there is no Referer header, then
+-- redirect to /.
+redirectRefererFunc :: MonadSnap m => (Maybe ByteString -> ByteString) -> m b
+redirectRefererFunc f = do
+    req <- getRequest
+    let referer = getHeader "Referer" req 
+    redirect $ f referer
 
 
 ------------------------------------------------------------------------------

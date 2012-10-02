@@ -12,6 +12,7 @@ module Snap.Extras.FlashNotice
 
 -------------------------------------------------------------------------------
 import           Control.Monad
+import           Control.Monad.Trans
 import           Data.Lens.Common
 import           Data.Text             (Text)
 import qualified Data.Text             as T
@@ -64,16 +65,16 @@ flashError session msg = withSession session $ with session $ setInSession "_err
 --
 -- Ex: <flash type='warning'/>
 -- Ex: <flash type='success'/>
-flashSplice :: Lens b (Snaplet SessionManager) -> SnapletISplice b v
+flashSplice :: Lens b (Snaplet SessionManager) -> SnapletISplice b
 flashSplice session = do
-  typ <- liftHeist $ liftM (getAttribute "type") getParamNode
+  typ <- liftM (getAttribute "type") getParamNode
   let typ' = maybe "warning" id typ
   let k = T.concat ["_", typ']
-  msg <- liftHandler $ withTop session $ getFromSession k
+  msg <- lift $ withTop session $ getFromSession k
   case msg of 
-    Nothing -> liftHeist $ return []
+    Nothing -> return []
     Just msg' -> do
-      liftHandler $ withTop session $ deleteFromSession k >> commitSession
-      liftHeist $ callTemplateWithText "_flash"
+      lift $ withTop session $ deleteFromSession k >> commitSession
+      callTemplateWithText "_flash"
            [ ("type", typ') , ("message", msg') ]
 

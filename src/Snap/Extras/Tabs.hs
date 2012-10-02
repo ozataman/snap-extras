@@ -39,7 +39,7 @@ import qualified Text.XmlHtml              as X
 -------------------------------------------------------------------------------
 initTabs :: HasHeist b => Initializer b v ()
 initTabs = do
-  addSplices [ ("tabs", liftHeist tabsSplice) ]
+  addSplices [ ("tabs", tabsSplice) ]
 
 
                               -------------------
