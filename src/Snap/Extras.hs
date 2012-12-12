@@ -12,7 +12,6 @@ module Snap.Extras
     ) where
 
 -------------------------------------------------------------------------------
-import Data.Lens.Common
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Session
@@ -35,7 +34,7 @@ import Paths_snap_extras
 -- Currently, we don't need to keep any state and simply return ().
 initExtras :: HasHeist b
            => Snaplet (Heist b)
-           -> Lens b (Snaplet SessionManager)
+           -> SnapletLens b SessionManager
            -> SnapletInit b ()
 initExtras heistSnaplet session = 
   makeSnaplet 

@@ -42,7 +42,7 @@ Library
     , data-lens >= 2.0
     , digestive-functors >= 0.3
     , digestive-functors-snap >= 0.3
-    , directory-tree >= 0.10 && < 0.11
+    , directory-tree >= 0.10 && < 0.12
     , errors >= 1.3.1 && < 1.4
     , filepath
     , heist >= 0.10

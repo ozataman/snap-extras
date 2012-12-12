@@ -13,7 +13,6 @@ module Snap.Extras.FlashNotice
 -------------------------------------------------------------------------------
 import           Control.Monad
 import           Control.Monad.Trans
-import           Data.Lens.Common
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import           Snap.Snaplet
@@ -31,32 +30,32 @@ import           Text.XmlHtml
 -- for examples.
 initFlashNotice 
     :: HasHeist b 
-    => Lens b (Snaplet SessionManager) -> Initializer b v ()
+    => SnapletLens b SessionManager -> Initializer b v ()
 initFlashNotice session = do
   addSplices [("flash", flashSplice session)]
 
 
 -------------------------------------------------------------------------------
 -- | Display an info message on next load of a page
-flashInfo :: Lens b (Snaplet SessionManager) -> Text -> Handler b b ()
+flashInfo :: SnapletLens b SessionManager -> Text -> Handler b b ()
 flashInfo session msg = withSession session $ with session $ setInSession "_info" msg
 
 
 -------------------------------------------------------------------------------
 -- | Display an warning message on next load of a page
-flashWarning :: Lens b (Snaplet SessionManager) -> Text -> Handler b b ()
+flashWarning :: SnapletLens b SessionManager -> Text -> Handler b b ()
 flashWarning session msg = withSession session $ with session $ setInSession "_warning" msg
 
 
 -------------------------------------------------------------------------------
 -- | Display a success message on next load of a page
-flashSuccess :: Lens b (Snaplet SessionManager) -> Text -> Handler b b ()
+flashSuccess :: SnapletLens b SessionManager -> Text -> Handler b b ()
 flashSuccess session msg = withSession session $ with session $ setInSession "_success" msg
 
 
 -------------------------------------------------------------------------------
 -- | Display an error message on next load of a page
-flashError :: Lens b (Snaplet SessionManager) -> Text -> Handler b b ()
+flashError :: SnapletLens b SessionManager -> Text -> Handler b b ()
 flashError session msg = withSession session $ with session $ setInSession "_error" msg
 
 
@@ -65,7 +64,7 @@ flashError session msg = withSession session $ with session $ setInSession "_err
 --
 -- Ex: <flash type='warning'/>
 -- Ex: <flash type='success'/>
-flashSplice :: Lens b (Snaplet SessionManager) -> SnapletISplice b
+flashSplice :: SnapletLens b SessionManager -> SnapletISplice b
 flashSplice session = do
   typ <- liftM (getAttribute "type") getParamNode
   let typ' = maybe "warning" id typ
