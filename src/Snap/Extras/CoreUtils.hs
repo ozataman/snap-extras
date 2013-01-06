@@ -18,6 +18,8 @@ module Snap.Extras.CoreUtils
     , redirectRefererFunc
     , dirify
     , undirify
+    , maybeBadReq
+    , fromMaybeM
     ) where
 
 -------------------------------------------------------------------------------
@@ -155,4 +157,15 @@ undirify = do
     if B.length uri > 1 && B.last uri == '/'
       then redirect (B.init uri)
       else return ()
+
+
+-------------------------------------------------------------------------------
+maybeBadReq :: MonadSnap m => ByteString -> m (Maybe a) -> m a
+maybeBadReq e f = fromMaybeM (badReq e) f
+
+
+-------------------------------------------------------------------------------
+-- | Evaluates an action that returns a Maybe and 
+fromMaybeM :: Monad m => m a -> m (Maybe a) -> m a
+fromMaybeM e f = maybe e return =<< f
 
