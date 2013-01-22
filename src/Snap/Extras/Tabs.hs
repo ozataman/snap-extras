@@ -11,6 +11,7 @@ module Snap.Extras.Tabs
     -- * Define Tabs in DOM via Heist
       initTabs
     , tabsSplice
+    , tabsCSplice
 
     -- * Define Tabs in Haskell
     , TabActiveMode (..)
@@ -29,6 +30,7 @@ import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Heist
+import qualified Heist.Compiled            as C
 import           Heist.Interpreted
 import           Text.XmlHtml
 import qualified Text.XmlHtml              as X
@@ -48,6 +50,48 @@ initTabs = do
 
 
 -------------------------------------------------------------------------------
+-- | Compiled splice for tabs.  This is not automatically bound by initTabs.
+-- You have to bind it yourself.
+tabsCSplice :: MonadSnap m => C.Splice m
+tabsCSplice = do
+    n <- getParamNode
+    let getContext = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
+        splices = [("tab", C.defer tabCSplice getContext)]
+    case n of
+      Element t attrs ch -> C.withLocalSplices splices [] $
+          C.runNode $ X.Element "ul" attrs ch
+      _ -> error "tabs tag has to be an Element"
+
+
+-------------------------------------------------------------------------------
+tabCSplice :: Monad m => C.Promise Text -> C.Splice m
+tabCSplice promise = do
+  n <- getParamNode
+  C.pureSplice (C.nodeSplice $ tabSpliceWorker n) promise
+
+
+tabSpliceWorker :: Node -> Text -> [Node]
+tabSpliceWorker n@(Element _ attrs ch) context =
+    case ps of
+      Left e -> error $ "Tab error: " ++ e
+      Right (url, ch, match) ->
+        let attr' = if match then ("class", "active") : attrs else attrs
+            a = X.Element "a" (("href", url) : attrs) ch
+         in [X.Element "li" attr' [a]]
+  where
+    ps = do
+      m <- wErr "tab must specify a 'match' attribute" $ lookup "match" attrs
+      url <- wErr "tabs must specify a 'url' attribute" $ getAttribute "url" n
+      m' <- case m of
+        "Exact" -> Right $ url == context
+        "Prefix" -> Right $ url `T.isPrefixOf` context
+        "Infix" -> Right $ url `T.isInfixOf` context
+        "None" -> Right $ False
+        _ -> Left "Unknown match type"
+      return (url, ch, m')
+
+
+-------------------------------------------------------------------------------
 tabsSplice :: MonadSnap m => Splice m
 tabsSplice = do
   context <- lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
@@ -60,26 +104,10 @@ tabsSplice = do
 
 
 -------------------------------------------------------------------------------
-tabSplice :: MonadSnap m => Text -> Splice m
+tabSplice :: Monad m => Text -> HeistT n m [Node]
 tabSplice context = do
-  n@(Element t attrs ch) <- getParamNode
-  let ps = do
-        m <- wErr "tab must specify a 'match' attribute" $ lookup "match" attrs
-        url <- wErr "tabs must specify a 'url' attribute" $ getAttribute "url" n
-        m' <- case m of
-          "Exact" -> Right $ url == context
-          "Prefix" -> Right $ url `T.isPrefixOf` context
-          "Infix" -> Right $ url `T.isInfixOf` context
-          "None" -> Right $ False
-          _ -> Left "Unknown match type"
-        ch <- return $ childNodes n
-        return (url, ch, m')
-  case ps of
-    Left e -> error $ "Tab error: " ++ e
-    Right (url, ch, match) -> do
-      let attr' = if match then ("class", "active") : attrs else attrs
-          a = X.Element "a" (("href", url) : attrs) ch
-      return $ [X.Element "li" attr' [a]]
+  n <- getParamNode
+  return $ tabSpliceWorker n context
 
 
 -------------------------------------------------------------------------------

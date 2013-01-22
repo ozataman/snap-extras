@@ -43,7 +43,6 @@ Library
     , blaze-html
     , bytestring
     , containers
-    , data-lens >= 2.0
     , digestive-functors >= 0.3
     , digestive-functors-heist >= 0.5.2
     , digestive-functors-snap >= 0.3
