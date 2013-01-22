@@ -5,25 +5,24 @@ module Snap.Extras
     , module Snap.Extras.TextUtils
     , module Snap.Extras.JSON
     , module Snap.Extras.FlashNotice
-    , module Snap.Extras.SpliceUtils
     , module Snap.Extras.FormUtils
     , module Snap.Extras.Tabs
     , initExtras
     ) where
 
 -------------------------------------------------------------------------------
-import Snap.Snaplet
-import Snap.Snaplet.Heist
-import Snap.Snaplet.Session
-import System.FilePath.Posix
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Session
+import           System.FilePath.Posix
 -------------------------------------------------------------------------------
-import Snap.Extras.CoreUtils
-import Snap.Extras.FlashNotice
-import Snap.Extras.FormUtils
-import Snap.Extras.JSON
-import Snap.Extras.SpliceUtils
-import Snap.Extras.Tabs
-import Snap.Extras.TextUtils
+import           Snap.Extras.CoreUtils
+import           Snap.Extras.FlashNotice
+import           Snap.Extras.FormUtils
+import           Snap.Extras.JSON
+import qualified Snap.Extras.SpliceUtils.Interpreted as I
+import           Snap.Extras.Tabs
+import           Snap.Extras.TextUtils
 -------------------------------------------------------------------------------
 import Paths_snap_extras
 -------------------------------------------------------------------------------
@@ -43,5 +42,5 @@ initExtras heistSnaplet session =
     (Just getDataDir) $ do
       addTemplatesAt heistSnaplet "" . (</> "resources/templates") =<< getSnapletFilePath
       initFlashNotice session
-      addUtilSplices
+      I.addUtilSplices
       initTabs

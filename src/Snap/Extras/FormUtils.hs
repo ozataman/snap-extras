@@ -8,6 +8,9 @@ module Snap.Extras.FormUtils
       maybeTrans
     , readMayTrans
     , readTrans
+    -- * Compiled splices
+    , editFormSplice
+
     -- -- * Form Elements
     -- , submitCancel
     -- , submitOnly
@@ -20,6 +23,7 @@ module Snap.Extras.FormUtils
     ) where
 
 -------------------------------------------------------------------------------
+import           Control.Error
 import           Control.Monad
 import qualified Data.ByteString.Char8 as B
 import           Data.List             (find)
@@ -27,12 +31,14 @@ import qualified Data.Map              as M
 import           Data.Maybe
 import           Data.String
 import           Data.Text             (Text)
+import           Data.Text.Encoding
 import qualified Data.Text             as T
+import           Heist
 import           Safe
 import           Snap.Core
 import           Text.Digestive
 import           Text.Digestive.Snap
-import           Heist
+import qualified Text.XmlHtml           as X
 -------------------------------------------------------------------------------
 
 
@@ -172,3 +178,25 @@ readTrans a = maybe (Error "Unrecognized input") Success $ readMay . T.unpack $ 
 --     Nothing -> do
 --       view' <- viewForm form nm
 --       return $ (view', Nothing)
+
+-------------------------------------------------------------------------------
+-- | Constructs a generalized edit form splice that looks up an ID param
+-- specified by the "by" attribute.  You might use this splice as follows:
+--
+-- <editFormSplice by="id">
+editFormSplice :: (Monad m, MonadSnap n)
+               => (n (Maybe a) -> HeistT n m b)
+               -- ^ Function for generating a splice from an optional default
+               -- value calculated at runtime.
+               -> (B.ByteString -> n (Maybe a))
+               -- ^ Function for retrieving the form default by ID.
+               -> HeistT n m b
+editFormSplice formSplice getById = do
+    node <- getParamNode
+    formSplice $ do
+      runMaybeT $ do
+        param <- MaybeT $ return $ X.getAttribute "by" node
+        key <- MaybeT $ getParam $ encodeUtf8 param
+        MaybeT (getById key)
+
+

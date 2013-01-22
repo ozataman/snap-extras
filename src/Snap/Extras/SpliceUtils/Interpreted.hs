@@ -1,9 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
 
-module Snap.Extras.SpliceUtils
-    ( ifSplice
-    , paramSplice
+module Snap.Extras.SpliceUtils.Interpreted
+    ( paramSplice
     , utilSplices
     , addUtilSplices
     , selectSplice
@@ -16,16 +15,14 @@ module Snap.Extras.SpliceUtils
 import           Control.Monad
 import           Control.Monad.Trans.Class
 import qualified Data.Configurator         as C
-import qualified Data.Foldable             as F
-import           Data.List
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
 import           Snap
-import           Snap.Snaplet.Heist
-import           System.Directory.Tree
-import           System.FilePath
+import           Snap.Extras.SpliceUtils.Common
+import           Snap.Snaplet.Heist.Interpreted
 import           Heist
+import           Heist.Splices
 import           Heist.Interpreted
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
@@ -45,15 +42,6 @@ utilSplices =
   ]
 
 
--------------------------------------------------------------------------------
--- | Run the splice contents if given condition is True, make splice
--- disappear if not.
-ifSplice :: Monad m => Bool -> Splice m
-ifSplice cond =
-    case cond of
-      False -> return []
-      True -> runChildren
-
 ------------------------------------------------------------------------------
 -- | Gets the value of a request parameter.  Example use:
 --
@@ -69,7 +57,7 @@ paramSplice = do
 
 
 -------------------------------------------------------------------------------
--- | Assume text are contains the name of a splice as Text.
+-- | Assume text area contains the name of a splice as Text.
 --
 -- This is helpful when you pass a default value to digestive-functors
 -- by putting the name of a splice as the value of a textarea tag.
@@ -110,8 +98,8 @@ selectSplice nm fid xs defv =
       gen (val,txt) = runChildrenWith
         [ ("val", textSplice val)
         , ("text", textSplice txt)
-        , ("ifSelected", ifSplice $ maybe False (== val) defv)
-        , ("ifNotSelected", ifSplice $ maybe True (/= val) defv) ]
+        , ("ifSelected", ifISplice $ maybe False (== val) defv)
+        , ("ifNotSelected", ifISplice $ maybe True (/= val) defv) ]
 
 
 ------------------------------------------------------------------------------
@@ -131,14 +119,10 @@ scriptsSplice :: MonadIO m
               -> String
               -- ^ A prefix to add to the src attribute of each script tag.
               -> m [Node]
-scriptsSplice dir prefix = do
-    tree <- liftIO $ build dir
-    let files = F.foldMap ((:[]) . fst) $ zipPaths $ "" :/ free tree
-        scripts = filter visibleScripts files
+scriptsSplice d prefix = do
+    scripts <- getScripts d
     return $ concat $ map includeJavascript scripts
   where
-    visibleScripts fname =
-        isSuffixOf ".js" fname && not (isPrefixOf "_" (takeFileName fname))
     includeJavascript script =
         [Element "script" [("src", T.pack $ prefix ++ script)] []]
 
@@ -160,7 +144,7 @@ scriptsSplice dir prefix = do
 -- > beta-functions-enabled = true
 ifFlagSplice :: SnapletISplice b
 ifFlagSplice = do
-  Element t ats es <- getParamNode
+  Element _ ats es <- getParamNode
   conf <- lift getSnapletUserConfig
   case lookup "ref" ats of
     Nothing -> return []
