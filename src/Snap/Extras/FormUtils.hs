@@ -181,9 +181,11 @@ readTrans a = maybe (Error "Unrecognized input") Success $ readMay . T.unpack $ 
 
 -------------------------------------------------------------------------------
 -- | Constructs a generalized edit form splice that looks up an ID param
--- specified by the "by" attribute.  You might use this splice as follows:
+-- specified by the @by@ attribute.  You might use this splice as follows:
 --
--- <editFormSplice by="id">
+-- > <editFormSplice by="id">
+--
+-- If you don't specify the @by@ attribute, the default is @by=\"id\"@.
 editFormSplice :: (Monad m, MonadSnap n)
                => (n (Maybe a) -> HeistT n m b)
                -- ^ Function for generating a splice from an optional default
@@ -193,9 +195,9 @@ editFormSplice :: (Monad m, MonadSnap n)
                -> HeistT n m b
 editFormSplice formSplice getById = do
     node <- getParamNode
+    let param = fromMaybe "id" $ X.getAttribute "by" node
     formSplice $ do
       runMaybeT $ do
-        param <- MaybeT $ return $ X.getAttribute "by" node
         key <- MaybeT $ getParam $ encodeUtf8 param
         MaybeT (getById key)
 
