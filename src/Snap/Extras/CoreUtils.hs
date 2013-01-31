@@ -14,6 +14,7 @@ module Snap.Extras.CoreUtils
     , reqParam
     , readParam
     , readMayParam
+    , parseMayParam
     , redirectReferer
     , redirectRefererFunc
     , dirify
@@ -24,6 +25,7 @@ module Snap.Extras.CoreUtils
 
 -------------------------------------------------------------------------------
 import Control.Monad
+import Data.Attoparsec
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Data.Maybe
@@ -118,6 +120,21 @@ readMayParam :: (MonadSnap m, Read a) => ByteString -> m (Maybe a)
 readMayParam k = do 
   p <- getParam k
   return $ readMay . B.unpack =<< p
+
+
+------------------------------------------------------------------------------
+-- | Use the supplied parser to read a parameter from request. Fail
+-- when the parameter is not present or can't be parsed.
+parseMayParam :: MonadSnap m =>
+                 Parser a
+              -> ByteString
+              -- ^ Parameter name.
+              -> m (Maybe a)
+parseMayParam parser k = do
+  input <- liftM (parseOnly parser) `liftM` getParam k
+  return $ case input of
+             Just (Right p) -> Just p
+             _ -> Nothing
 
 
 ------------------------------------------------------------------------------

@@ -38,6 +38,7 @@ Library
   hs-source-dirs: src
   Build-depends:
       aeson >= 0.6
+    , attoparsec >= 0.10
     , base >= 4 && < 5
     , blaze-builder
     , blaze-html
