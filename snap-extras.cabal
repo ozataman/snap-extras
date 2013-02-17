@@ -8,8 +8,8 @@ Description: This package contains a collection of helper functions
              the initializer in there to get them all at once.
 License:             BSD3
 License-file:        LICENSE
-Author:              Ozgun Ataman
-Maintainer:          ozataman@gmail.com
+Author:              Ozgun Ataman, Doug Beardsley
+Maintainer:          oz@soostone.com
 Category:            Web, Snap
 Build-type:          Simple
 Cabal-version:       >= 1.6
