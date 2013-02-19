@@ -23,6 +23,7 @@ Library
   Exposed-modules:     
     Snap.Extras
     Snap.Extras.CoreUtils
+    Snap.Extras.CSRF
     Snap.Extras.TextUtils
     Snap.Extras.JSON
     Snap.Extras.FlashNotice
