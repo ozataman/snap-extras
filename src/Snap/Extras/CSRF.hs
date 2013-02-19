@@ -2,7 +2,7 @@
 
 module Snap.Extras.CSRF where
 
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 import qualified Data.ByteString.Char8 as B
 import           Data.Text             (Text)
 import qualified Data.Text.Encoding    as T
@@ -11,11 +11,22 @@ import           Snap.Snaplet.Session
 import           Heist
 import           Heist.Interpreted
 import qualified Text.XmlHtml          as X
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 
 
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- | A splice that makes the CSRF token available to templates.  Typically we
+-- use it by binding a splice and using the CSRF token provided by the session
+-- snaplet as follows:
+--
+-- @(\"csrfToken\", csrfTokenSplice $ with session 'csrfToken')@
+--
+-- Where @session@ is a lens to the session snaplet.  Then you can make it
+-- available to javascript code by putting a meta tag at the top of every
+-- page like this:
+--
+-- > <meta name="csrf-token" content="${csrfToken}">
 csrfTokenSplice :: Monad m
                 => m Text
                 -- ^ A computation in the runtime monad that gets the
@@ -26,12 +37,12 @@ csrfTokenSplice f = do
     textSplice token
 
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- | Adds a hidden _csrf input field as the first child of the bound tag.  For
 -- full site protection against CSRF, you should bind this splice to the form
--- form tag, and then make sure your app checks all POST requests for the
--- presence of this CSRF token and that the token is randomly generated and
--- secure on a per session basis.
+-- tag, and then make sure your app checks all POST requests for the presence
+-- of this CSRF token and that the token is randomly generated and secure on a
+-- per session basis.
 secureForm :: MonadIO m
            => m Text
            -- ^ A computation in the runtime monad that gets the CSRF
