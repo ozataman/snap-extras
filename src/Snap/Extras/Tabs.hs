@@ -21,8 +21,11 @@ module Snap.Extras.Tabs
     ) where
 
 -------------------------------------------------------------------------------
+import           Blaze.ByteString.Builder
 import           Control.Monad
+import           Control.Monad.Trans
 import           Control.Monad.Trans.Class
+import           Data.Monoid
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
@@ -39,9 +42,12 @@ import qualified Text.XmlHtml              as X
 
 
 -------------------------------------------------------------------------------
-initTabs :: HasHeist b => Initializer b v ()
-initTabs = do
-  addSplices [ ("tabs", tabsSplice) ]
+initTabs :: HasHeist b => Snaplet (Heist b) -> Initializer b v ()
+initTabs h = do
+    let splices = [ ("tabs", tabsSplice) ]
+        csplices = [ ("tabs", tabsCSplice) ]
+    addConfig h $ mempty { hcCompiledSplices = csplices
+                         , hcInterpretedSplices = splices }
 
 
                               -------------------
@@ -50,8 +56,7 @@ initTabs = do
 
 
 -------------------------------------------------------------------------------
--- | Compiled splice for tabs.  This is not automatically bound by initTabs.
--- You have to bind it yourself.
+-- | Compiled splice for tabs.
 tabsCSplice :: MonadSnap m => C.Splice m
 tabsCSplice = do
     n <- getParamNode
@@ -63,11 +68,33 @@ tabsCSplice = do
       _ -> error "tabs tag has to be an Element"
 
 
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- | Can't use tabSpliceWorker because we have to explicitly run the
+-- attributes in order to get ${} splice substitution.
 tabCSplice :: Monad m => C.Promise Text -> C.Splice m
 tabCSplice promise = do
-  n <- getParamNode
-  C.pureSplice (C.nodeSplice $ tabSpliceWorker n) promise
+    n@(Element _ attrs ch) <- getParamNode
+    attrsAction <- C.runAttributesRaw attrs
+    let ps as context = do
+          m <- wErr "tab must specify a 'match' attribute" $ lookup "match" as
+          url <- wErr "tabs must specify a 'url' attribute" $ lookup "url" as
+          m' <- case m of
+            "Exact" -> Right $ url == context
+            "Prefix" -> Right $ url `T.isPrefixOf` context
+            "Infix" -> Right $ url `T.isInfixOf` context
+            "None" -> Right $ False
+            _ -> Left "Unknown match type"
+          return (url, ch, m')
+    return $ C.yieldRuntime $ do
+        ctx <- C.getPromise promise
+        as <- attrsAction
+        let res = case ps as ctx of
+              Left e -> error $ "Tab error: " ++ e
+              Right (url, ch, match) ->
+                let attr' = if match then ("class", "active") : as else as
+                    a = X.Element "a" (("href", url) : as) ch
+                 in X.renderHtmlFragment X.UTF8 [X.Element "li" attr' [a]]
+        return res
 
 
 tabSpliceWorker :: Node -> Text -> [Node]

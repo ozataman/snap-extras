@@ -40,7 +40,8 @@ initExtras heistSnaplet session =
     "Snap Extras" 
     "Collection of utilities for web applications" 
     (Just getDataDir) $ do
-      addTemplatesAt heistSnaplet "" . (</> "resources/templates") =<< getSnapletFilePath
-      initFlashNotice session
+      addTemplatesAt heistSnaplet "" . (</> "resources/templates")
+        =<< getSnapletFilePath
+      initFlashNotice heistSnaplet session
       I.addUtilSplices
-      initTabs
+      initTabs heistSnaplet
