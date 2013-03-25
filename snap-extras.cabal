@@ -52,7 +52,7 @@ Library
     , directory-tree           >= 0.10 && < 0.12
     , errors                   >= 1.4 && < 1.5
     , filepath
-    , heist                    >= 0.11
+    , heist                    >= 0.12
     , mtl                      >= 2.0 && < 2.2
     , readable                 >= 0.1 && < 0.2
     , safe

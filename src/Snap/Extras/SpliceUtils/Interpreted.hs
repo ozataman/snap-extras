@@ -4,7 +4,6 @@
 module Snap.Extras.SpliceUtils.Interpreted
     ( paramSplice
     , utilSplices
-    , addUtilSplices
     , selectSplice
     , runTextAreas
     , scriptsSplice
@@ -26,12 +25,6 @@ import           Heist.Splices
 import           Heist.Interpreted
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
-
-
--------------------------------------------------------------------------------
--- | Bind splices offered in this module in your 'Initializer'
-addUtilSplices :: HasHeist b => Initializer b v ()
-addUtilSplices = addSplices utilSplices
 
 
 -------------------------------------------------------------------------------
