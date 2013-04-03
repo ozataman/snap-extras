@@ -8,6 +8,7 @@ module Snap.Extras.SpliceUtils.Interpreted
     , runTextAreas
     , scriptsSplice
     , ifFlagSplice
+    , refererSplice
     ) where
 
 -------------------------------------------------------------------------------
@@ -32,7 +33,13 @@ import           Text.XmlHtml
 utilSplices :: [(Text, SnapletISplice b)]
 utilSplices =
   [ ("rqparam", paramSplice)
+  , ("refererLink", refererSplice)
   ]
+
+
+refererSplice :: MonadSnap m => Splice m
+refererSplice =
+  textSplice . maybe "/" T.decodeUtf8 =<< lift (getsRequest (getHeader "Referer"))
 
 
 ------------------------------------------------------------------------------

@@ -19,7 +19,13 @@ import           Text.XmlHtml
 
 utilSplices :: MonadSnap m => [(Text, Splice m)]
 utilSplices = [ ("rqparam", paramSplice)
+              , ("refererLink", refererCSplice)
               ]
+
+
+refererCSplice :: MonadSnap m => Splice m
+refererCSplice = return $ yieldRuntimeText $ return .
+    maybe "/" T.decodeUtf8 =<< lift (getsRequest (getHeader "Referer"))
 
 
 ------------------------------------------------------------------------------
