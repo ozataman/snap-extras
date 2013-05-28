@@ -30,7 +30,6 @@ Library
     Snap.Extras.SpliceUtils.Compiled
     Snap.Extras.SpliceUtils.Interpreted
     Snap.Extras.FormUtils
---    Snap.Extras.REST
     Snap.Extras.Tabs
     Snap.Extras.NavTrails
   other-modules:
