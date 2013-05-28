@@ -1,11 +1,11 @@
 Name:                snap-extras
-Version:             0.5.2
+Version:             0.6
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
-Description: This package contains a collection of helper functions
-             that come in handy in most practical, real-world
-             applications. Check individual modules to understand
-             what's here. You can simply import Snap.Extras and use
-             the initializer in there to get them all at once.
+Description:         This package contains a collection of helper functions
+                     that come in handy in most practical, real-world
+                     applications. Check individual modules to understand
+                     what's here. You can simply import Snap.Extras and use
+                     the initializer in there to get them all at once.
 License:             BSD3
 License-file:        LICENSE
 Author:              Ozgun Ataman, Doug Beardsley
