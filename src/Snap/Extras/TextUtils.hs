@@ -34,9 +34,6 @@ readT = readNote "Can't read value in readT" . T.unpack
 readBS :: (Read a) => ByteString -> a
 readBS = readNote "Can't read value in readBS" . B.unpack
 
-maybeEither (Left e) = Nothing
-maybeEither (Right x) = Just x
-
 
 titleCase :: Text -> Text
 titleCase = T.unwords . map upFirst . T.words

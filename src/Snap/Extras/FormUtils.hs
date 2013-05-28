@@ -24,20 +24,14 @@ module Snap.Extras.FormUtils
 
 -------------------------------------------------------------------------------
 import           Control.Error
-import           Control.Monad
 import qualified Data.ByteString.Char8 as B
-import           Data.List             (find)
-import qualified Data.Map              as M
-import           Data.Maybe
 import           Data.String
 import           Data.Text             (Text)
 import           Data.Text.Encoding
 import qualified Data.Text             as T
 import           Heist
-import           Safe
 import           Snap.Core
 import           Text.Digestive
-import           Text.Digestive.Snap
 import qualified Text.XmlHtml           as X
 -------------------------------------------------------------------------------
 

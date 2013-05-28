@@ -7,10 +7,8 @@ module Snap.Extras.NavTrails where
 import           Blaze.ByteString.Builder.ByteString
 import           Control.Monad.State.Strict
 import           Data.ByteString            (ByteString)
-import qualified Data.ByteString.Char8      as B
 import           Data.Maybe
 import           Data.Monoid
-import qualified Data.Set                   as S
 import           Data.Text                  (Text)
 import qualified Data.Text.Encoding         as T
 import           Snap.Core
@@ -31,12 +29,6 @@ data NavTrail b = NavTrail {
 
 
 -------------------------------------------------------------------------------
---initNavTrail
---    :: HasHeist b
---    => SnapletLens b SessionManager
---    -> Bool
---    -- ^ Auto-add all splices?
---    -> SnapletInit b (NavTrail b)
 initNavTrail :: SnapletLens b SessionManager
              -- ^ Lens to the session snaplet
              -> Maybe (Snaplet (Heist b))
@@ -53,12 +45,14 @@ initNavTrail ses heist =
 
 -------------------------------------------------------------------------------
 -- |
+setFocus :: Handler b (NavTrail b) ()
 setFocus = do
   setFocus' =<< rqURI `fmap` getRequest
 
 
 -------------------------------------------------------------------------------
 -- |
+setFocus' :: ByteString -> Handler b (NavTrail b) ()
 setFocus' uri = do
   sl <- gets ntSes
   withSession sl $ withTop sl $ do
@@ -67,6 +61,7 @@ setFocus' uri = do
 
 -------------------------------------------------------------------------------
 -- |
+setFocusToRef :: Handler b (NavTrail b) ()
 setFocusToRef = do
   sl <- gets ntSes
   (maybe "/" id . getHeader "Referer") `fmap` getRequest >>=
@@ -75,22 +70,26 @@ setFocusToRef = do
 
 -------------------------------------------------------------------------------
 -- |
+getFocus :: Handler b (NavTrail b) (Maybe Text)
 getFocus = do
   sl <- gets ntSes
   withTop sl (getFromSession "_nt_focus")
 
 
+getFocusDef :: Text -> Handler b (NavTrail b) Text
 getFocusDef def = (fromJust . (`mplus` Just def)) `fmap` getFocus
 
 
 
 -------------------------------------------------------------------------------
 -- |
+redirBack :: MonadSnap m => m a
 redirBack = redirect =<< (maybe "/" id . getHeader "Referer") `fmap` getRequest
 
 
 -------------------------------------------------------------------------------
 -- |
+redirFocus :: ByteString -> Handler b (NavTrail b) a
 redirFocus def = do
   f <- (`mplus` Just def) `fmap` (fmap T.encodeUtf8 `fmap` getFocus)
   redirect $ fromJust f
@@ -107,6 +106,7 @@ backCSplice :: C.Splice (Handler b v)
 backCSplice = return $ C.yieldRuntime $ do
   lift $ (fromByteString . rqURI) `fmap` getRequest
 
+
 -------------------------------------------------------------------------------
 -- |
 focusSplice :: SnapletLens (Snaplet v) (NavTrail b)
@@ -121,8 +121,10 @@ focusCSplice lens = return $ C.yieldRuntimeText $ do
   uri <- lift $ with' lens getFocus
   return $ fromMaybe "" uri
 
+
 -------------------------------------------------------------------------------
 -- |
+addNavTrailSplices :: Snaplet (Heist b) -> Initializer b (NavTrail b) ()
 addNavTrailSplices heist = do
   lens <- getLens
   addConfig heist $

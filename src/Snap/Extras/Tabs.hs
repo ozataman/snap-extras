@@ -21,10 +21,9 @@ module Snap.Extras.Tabs
     ) where
 
 -------------------------------------------------------------------------------
-import           Blaze.ByteString.Builder
+import           Control.Error
 import           Control.Monad
 import           Control.Monad.Trans
-import           Control.Monad.Trans.Class
 import           Data.Monoid
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T
@@ -60,10 +59,10 @@ initTabs h = do
 tabsCSplice :: MonadSnap m => C.Splice m
 tabsCSplice = do
     n <- getParamNode
-    let getContext = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-        splices = [("tab", C.defer tabCSplice getContext)]
+    let getCtx = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
+        splices = [("tab", C.defer tabCSplice getCtx)]
     case n of
-      Element t attrs ch -> C.withLocalSplices splices [] $
+      Element _ attrs ch -> C.withLocalSplices splices [] $
           C.runNode $ X.Element "ul" attrs ch
       _ -> error "tabs tag has to be an Element"
 
@@ -73,11 +72,11 @@ tabsCSplice = do
 -- attributes in order to get ${} splice substitution.
 tabCSplice :: Monad m => C.Promise Text -> C.Splice m
 tabCSplice promise = do
-    n@(Element _ attrs ch) <- getParamNode
+    (Element _ attrs ch) <- getParamNode
     attrsAction <- C.runAttributesRaw attrs
     let ps as context = do
-          m <- wErr "tab must specify a 'match' attribute" $ lookup "match" as
-          url <- wErr "tabs must specify a 'url' attribute" $ lookup "url" as
+          m <- note "tab must specify a 'match' attribute" $ lookup "match" as
+          url <- note "tabs must specify a 'url' attribute" $ lookup "url" as
           m' <- case m of
             "Exact" -> Right $ url == context
             "Prefix" -> Right $ url `T.isPrefixOf` context
@@ -90,9 +89,9 @@ tabCSplice promise = do
         as <- attrsAction
         let res = case ps as ctx of
               Left e -> error $ "Tab error: " ++ e
-              Right (url, ch, match) ->
+              Right (url, c, match) ->
                 let attr' = if match then ("class", "active") : as else as
-                    a = X.Element "a" (("href", url) : as) ch
+                    a = X.Element "a" (("href", url) : as) c
                  in X.renderHtmlFragment X.UTF8 [X.Element "li" attr' [a]]
         return res
 
@@ -101,14 +100,14 @@ tabSpliceWorker :: Node -> Text -> [Node]
 tabSpliceWorker n@(Element _ attrs ch) context =
     case ps of
       Left e -> error $ "Tab error: " ++ e
-      Right (url, ch, match) ->
+      Right (url, c, match) ->
         let attr' = if match then ("class", "active") : attrs else attrs
-            a = X.Element "a" (("href", url) : attrs) ch
+            a = X.Element "a" (("href", url) : attrs) c
          in [X.Element "li" attr' [a]]
   where
     ps = do
-      m <- wErr "tab must specify a 'match' attribute" $ lookup "match" attrs
-      url <- wErr "tabs must specify a 'url' attribute" $ getAttribute "url" n
+      m <- note "tab must specify a 'match' attribute" $ lookup "match" attrs
+      url <- note "tabs must specify a 'url' attribute" $ getAttribute "url" n
       m' <- case m of
         "Exact" -> Right $ url == context
         "Prefix" -> Right $ url `T.isPrefixOf` context
@@ -116,6 +115,7 @@ tabSpliceWorker n@(Element _ attrs ch) context =
         "None" -> Right $ False
         _ -> Left "Unknown match type"
       return (url, ch, m')
+tabSpliceWorker _ _ = []
 
 
 -------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ tabsSplice = do
   let bind = bindSplices [("tab", tabSplice context)]
   n <- getParamNode
   case n of
-    Element t attrs ch -> localHS bind $ runNodeList [X.Element "ul" attrs ch]
+    Element _ attrs ch -> localHS bind $ runNodeList [X.Element "ul" attrs ch]
     _ -> error "tabs tag has to be an Element"
 
 
@@ -136,9 +136,6 @@ tabSplice context = do
   n <- getParamNode
   return $ tabSpliceWorker n context
 
-
--------------------------------------------------------------------------------
-wErr err m = maybe (Left err) Right m
 
 
                              --------------------
@@ -220,8 +217,3 @@ tab url text attr md context = X.Element "li" attr' [tlink url text]
 -------------------------------------------------------------------------------
 tlink :: Text -> Text -> Node
 tlink target text = X.Element "a" [("href", target)] [X.TextNode text]
-
-
--------------------------------------------------------------------------------
-link :: Text -> [Node] -> Node
-link target ch = X.Element "a" [("href", target)] ch
