@@ -21,6 +21,7 @@ module Snap.Extras.CoreUtils
     , undirify
     , maybeBadReq
     , fromMaybeM
+    , (-/-)
     ) where
 
 -------------------------------------------------------------------------------
@@ -185,4 +186,16 @@ maybeBadReq e f = fromMaybeM (badReq e) f
 -- | Evaluates an action that returns a Maybe and 
 fromMaybeM :: Monad m => m a -> m (Maybe a) -> m a
 fromMaybeM e f = maybe e return =<< f
+
+
+------------------------------------------------------------------------------
+-- | Concatenates two URL segments with a '/' between them.  To prevent double
+-- slashes, all trailing slashes are removed from the first path and all
+-- leading slashes are removed from the second path.
+(-/-) :: ByteString -> ByteString -> ByteString
+(-/-) a b = B.concat [revDrop a, "/", dropSlash b]
+  where
+    dropSlash = B.dropWhile (=='/')
+    revDrop = B.reverse . dropSlash . B.reverse
+
 

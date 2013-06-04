@@ -4,11 +4,11 @@
 module Snap.Extras.SpliceUtils.Interpreted
     ( paramSplice
     , utilSplices
-    , addUtilSplices
     , selectSplice
     , runTextAreas
     , scriptsSplice
     , ifFlagSplice
+    , refererSplice
     ) where
 
 -------------------------------------------------------------------------------
@@ -29,17 +29,17 @@ import           Text.XmlHtml
 
 
 -------------------------------------------------------------------------------
--- | Bind splices offered in this module in your 'Initializer'
-addUtilSplices :: HasHeist b => Initializer b v ()
-addUtilSplices = addSplices utilSplices
-
-
--------------------------------------------------------------------------------
 -- | A list of splices offered in this module
 utilSplices :: [(Text, SnapletISplice b)]
 utilSplices =
   [ ("rqparam", paramSplice)
+  , ("refererLink", refererSplice)
   ]
+
+
+refererSplice :: MonadSnap m => Splice m
+refererSplice =
+  textSplice . maybe "/" T.decodeUtf8 =<< lift (getsRequest (getHeader "Referer"))
 
 
 ------------------------------------------------------------------------------

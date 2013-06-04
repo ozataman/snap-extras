@@ -34,10 +34,12 @@ import           Text.XmlHtml
 -- for examples.
 initFlashNotice 
     :: HasHeist b 
-    => SnapletLens b SessionManager -> Initializer b v ()
-initFlashNotice session = do
-  addSplices [("flash", flashSplice session)]
-
+    => Snaplet (Heist b) -> SnapletLens b SessionManager -> Initializer b v ()
+initFlashNotice h session = do
+    let splices = [ ("flash", flashSplice session) ]
+        csplices = [ ("flash", flashCSplice session) ]
+    addConfig h $ mempty { hcCompiledSplices = csplices
+                         , hcInterpretedSplices = splices }
 
 -------------------------------------------------------------------------------
 -- | Display an info message on next load of a page

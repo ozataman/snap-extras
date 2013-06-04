@@ -6,6 +6,7 @@ module Snap.Extras.SpliceUtils.Compiled where
 import           Blaze.ByteString.Builder.ByteString
 import           Control.Monad.Trans
 import           Data.Monoid
+import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
 import           Snap.Core
@@ -14,6 +15,17 @@ import           Heist
 import           Heist.Compiled
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
+
+
+utilSplices :: MonadSnap m => [(Text, Splice m)]
+utilSplices = [ ("rqparam", paramSplice)
+              , ("refererLink", refererCSplice)
+              ]
+
+
+refererCSplice :: MonadSnap m => Splice m
+refererCSplice = return $ yieldRuntimeText $ return .
+    maybe "/" T.decodeUtf8 =<< lift (getsRequest (getHeader "Referer"))
 
 
 ------------------------------------------------------------------------------
