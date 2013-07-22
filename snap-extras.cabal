@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.6
+Version:             0.7
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description:         This package contains a collection of helper functions
                      that come in handy in most practical, real-world
@@ -47,16 +47,16 @@ Library
     , containers               >= 0.3   && < 0.6
     , data-default             >= 0.5   && < 0.6
     , digestive-functors       >= 0.3   && < 0.7
-    , digestive-functors-heist >= 0.5.2 && < 0.8
+    , digestive-functors-heist >= 0.8   && < 0.9
     , digestive-functors-snap  >= 0.3   && < 0.7
     , directory-tree           >= 0.10  && < 0.12
     , errors                   >= 1.4   && < 1.5
     , filepath                 >= 1.1   && < 1.4
-    , heist                    >= 0.12  && < 0.13
+    , heist                    >= 0.13  && < 0.14
     , mtl                      >= 2.0   && < 2.2
     , readable                 >= 0.1   && < 0.2
     , safe                     >= 0.3   && < 0.4
-    , snap                     >= 0.10  && < 0.13
+    , snap                     >= 0.13  && < 0.14
     , snap-core                >= 0.7   && < 0.10
     , text                     >= 0.11  && < 0.12
     , transformers             >= 0.2   && < 0.4

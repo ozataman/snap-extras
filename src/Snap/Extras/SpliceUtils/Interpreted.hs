@@ -30,11 +30,10 @@ import           Text.XmlHtml
 
 -------------------------------------------------------------------------------
 -- | A list of splices offered in this module
-utilSplices :: [(Text, SnapletISplice b)]
-utilSplices =
-  [ ("rqparam", paramSplice)
-  , ("refererLink", refererSplice)
-  ]
+utilSplices :: Splices (SnapletISplice b)
+utilSplices = do
+  "rqparam" ?! paramSplice
+  "refererLink" ?! refererSplice
 
 
 refererSplice :: MonadSnap m => Splice m
@@ -64,7 +63,7 @@ paramSplice = do
 --
 -- > heistLocal runTextAreas $ render "joo/index"
 runTextAreas :: Monad m => HeistState m -> HeistState m
-runTextAreas = bindSplices [ ("textarea", ta)]
+runTextAreas = bindSplices ("textarea" ?! ta)
  where
    ta = do
      hs <- getHS
@@ -91,15 +90,17 @@ selectSplice
     -- ^ Default value
     -> Splice m
 selectSplice nm fid xs defv =
-    callTemplate "_select"
-      [("options", opts), ("name", textSplice nm), ("id", textSplice fid)]
+    callTemplate "_select" $ do
+      "options" ?! opts
+      "name" ?! textSplice nm
+      "id" ?! textSplice fid
     where
       opts = mapSplices gen xs
-      gen (val,txt) = runChildrenWith
-        [ ("val", textSplice val)
-        , ("text", textSplice txt)
-        , ("ifSelected", ifISplice $ maybe False (== val) defv)
-        , ("ifNotSelected", ifISplice $ maybe True (/= val) defv) ]
+      gen (val,txt) = runChildrenWith $ do
+        "val" ?! textSplice val
+        "text" ?! textSplice txt
+        "ifSelected" ?! ifISplice $ maybe False (== val) defv
+        "ifNotSelected" ?! ifISplice $ maybe True (/= val) defv
 
 
 ------------------------------------------------------------------------------

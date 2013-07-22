@@ -17,10 +17,10 @@ import           Text.XmlHtml
 -------------------------------------------------------------------------------
 
 
-utilSplices :: MonadSnap m => [(Text, Splice m)]
-utilSplices = [ ("rqparam", paramSplice)
-              , ("refererLink", refererCSplice)
-              ]
+utilSplices :: MonadSnap m => Splices (Splice m)
+utilSplices = do
+    "rqparam" ?! paramSplice
+    "refererLink" ?! refererCSplice
 
 
 refererCSplice :: MonadSnap m => Splice m

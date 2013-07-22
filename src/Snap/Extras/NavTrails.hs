@@ -128,12 +128,12 @@ addNavTrailSplices :: Snaplet (Heist b) -> Initializer b (NavTrail b) ()
 addNavTrailSplices heist = do
   lens <- getLens
   addConfig heist $
-    mempty { hcCompiledSplices =
-               [ ("linkToFocus", focusCSplice lens)
-               , ("linkToBack", backCSplice) ]
-           , hcInterpretedSplices =
-               [ ("linkToFocus", focusSplice lens)
-               , ("linkToBack", backSplice) ]
+    mempty { hcCompiledSplices = do
+               "linkToFocus" ?! focusCSplice lens
+               "linkToBack" ?! backCSplice
+           , hcInterpretedSplices = do
+               "linkToFocus" ?! focusSplice lens
+               "linkToBack" ?! backSplice
            }
 
 

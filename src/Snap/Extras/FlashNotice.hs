@@ -36,8 +36,8 @@ initFlashNotice
     :: HasHeist b 
     => Snaplet (Heist b) -> SnapletLens b SessionManager -> Initializer b v ()
 initFlashNotice h session = do
-    let splices = [ ("flash", flashSplice session) ]
-        csplices = [ ("flash", flashCSplice session) ]
+    let splices = ("flash" ?! flashSplice session)
+        csplices = ("flash" ?! flashCSplice session)
     addConfig h $ mempty { hcCompiledSplices = csplices
                          , hcInterpretedSplices = splices }
 
@@ -80,8 +80,9 @@ flashSplice session = do
     Nothing -> return []
     Just msg' -> do
       lift $ withTop session $ deleteFromSession k >> commitSession
-      callTemplateWithText "_flash"
-           [ ("type", typ') , ("message", msg') ]
+      callTemplateWithText "_flash" $ do
+           "type" ?! typ'
+           "message" ?! msg'
 
 
 -------------------------------------------------------------------------------
@@ -94,20 +95,21 @@ flashCSplice session = do
     n <- getParamNode
     let typ = maybe "warning" id $ getAttribute "type" n
         k = T.concat ["_", typ]
-        splice prom = do
-            flashTemplate <- C.withLocalSplices
-              [ ("type", return $ C.yieldPureText typ)
-              , ("message", return $ C.yieldRuntimeText $ liftM fromJust
-                                   $ C.getPromise prom) ]
-              [] (C.callTemplate "_flash")
+        splice getVal = do
+            let ss = do
+                  "type" ?! return $ C.yieldPureText typ
+                  "message" ?! return $ C.yieldRuntimeText $ liftM fromJust
+                                      $ getVal
+            flashTemplate <- C.withLocalSplices ss
+              noSplices (C.callTemplate "_flash")
             return $ C.yieldRuntime $ do
-                msg <- C.getPromise prom
+                msg <- getVal
                 case msg of
                   Nothing -> return mempty
                   Just _ -> do
                     lift $ withTop session $
                       deleteFromSession k >> commitSession
                     C.codeGen flashTemplate
-    C.defer splice (lift $ withTop session $ getFromSession k)
+    splice (lift $ withTop session $ getFromSession k)
 
 
