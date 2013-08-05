@@ -7,6 +7,7 @@ module Snap.Extras
     , module Snap.Extras.FlashNotice
     , module Snap.Extras.FormUtils
     , module Snap.Extras.Tabs
+    , module Snap.Extras.RestUtils
     , initExtras
     ) where
 
@@ -26,6 +27,7 @@ import qualified Snap.Extras.SpliceUtils.Compiled as C
 import qualified Snap.Extras.SpliceUtils.Interpreted as I
 import           Snap.Extras.Tabs
 import           Snap.Extras.TextUtils
+import           Snap.Extras.RestUtils
 -------------------------------------------------------------------------------
 import Paths_snap_extras
 -------------------------------------------------------------------------------

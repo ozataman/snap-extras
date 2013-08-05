@@ -2,23 +2,23 @@
 
 
 module Snap.Extras.RestUtils
-    ( StatusCode
-    , AuthenticationRejection(..)
+    ( AuthenticationRejection(..)
     , AuthPolicy(..)
     , withRestAuth) where
 
 -------------------------------------------------------------------------------
-import Snap.Core
+import Snap.Snaplet
 import Snap.Extras.CoreUtils (finishEarly)
+import Data.ByteString (ByteString)
 -------------------------------------------------------------------------------
 
 
-type StatusCode = Int
-
-
 data AuthenticationRejection = AuthenticationRejection
-    { rejectionCode :: StatusCode
-    , rejectionMessage :: ByteString } deriving (Show)
+    { rejectionCode :: Int
+      -- ^ The HTTP status code of the failure
+    , rejectionMessage :: ByteString
+      -- ^ The rejection message
+    } deriving (Show)
 
 
 --------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ newtype AuthPolicy b v = AuthPolicy
 -- | Restful Authenticator, inspired to [Spray](http://spray.io/). The idea
 -- is to have an handler combinator which, given an authentication policy, is
 -- able to determine if the HTTP request should be "allowed" to continue or
--- should be rejected with a particular error. This is particularly useful
+-- should be rejected with a particular error. This is useful
 -- when developing restful services, which typically requires some sort of
 -- "low level authentication", for example an OAuth token to be passed in the
 -- HTTP header.

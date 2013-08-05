@@ -32,6 +32,7 @@ Library
     Snap.Extras.FormUtils
     Snap.Extras.Tabs
     Snap.Extras.NavTrails
+    Snap.Extras.RestUtils
   other-modules:
     Snap.Extras.SpliceUtils.Common
     Paths_snap_extras
