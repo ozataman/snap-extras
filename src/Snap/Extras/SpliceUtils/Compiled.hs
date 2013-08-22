@@ -6,7 +6,6 @@ module Snap.Extras.SpliceUtils.Compiled where
 import           Blaze.ByteString.Builder.ByteString
 import           Control.Monad.Trans
 import           Data.Monoid
-import           Data.Text                 (Text)
 import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
 import           Snap.Core
@@ -19,8 +18,8 @@ import           Text.XmlHtml
 
 utilSplices :: MonadSnap m => Splices (Splice m)
 utilSplices = do
-    "rqparam" ?! paramSplice
-    "refererLink" ?! refererCSplice
+    "rqparam" ## paramSplice
+    "refererLink" ## refererCSplice
 
 
 refererCSplice :: MonadSnap m => Splice m

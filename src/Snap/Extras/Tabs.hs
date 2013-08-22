@@ -43,8 +43,8 @@ import qualified Text.XmlHtml              as X
 -------------------------------------------------------------------------------
 initTabs :: HasHeist b => Snaplet (Heist b) -> Initializer b v ()
 initTabs h = do
-    let splices = ("tabs" ?! tabsSplice)
-        csplices = ("tabs" ?! tabsCSplice)
+    let splices = ("tabs" ## tabsSplice)
+        csplices = ("tabs" ## tabsCSplice)
     addConfig h $ mempty { hcCompiledSplices = csplices
                          , hcInterpretedSplices = splices }
 
@@ -60,7 +60,7 @@ tabsCSplice :: MonadSnap m => C.Splice m
 tabsCSplice = do
     n <- getParamNode
     let getCtx = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-        splices = ("tab" ?! tabCSplice getCtx)
+        splices = ("tab" ## tabCSplice getCtx)
     case n of
       Element _ attrs ch -> C.withLocalSplices splices noSplices $
           C.runNode $ X.Element "ul" attrs ch
@@ -122,7 +122,7 @@ tabSpliceWorker _ _ = []
 tabsSplice :: MonadSnap m => Splice m
 tabsSplice = do
   context <- lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-  let bind = bindSplices ("tab" ?! tabSplice context)
+  let bind = bindSplices ("tab" ## tabSplice context)
   n <- getParamNode
   case n of
     Element _ attrs ch -> localHS bind $ runNodeList [X.Element "ul" attrs ch]

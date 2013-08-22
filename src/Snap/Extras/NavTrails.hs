@@ -129,11 +129,11 @@ addNavTrailSplices heist = do
   lens <- getLens
   addConfig heist $
     mempty { hcCompiledSplices = do
-               "linkToFocus" ?! focusCSplice lens
-               "linkToBack" ?! backCSplice
+               "linkToFocus" ## focusCSplice lens
+               "linkToBack" ## backCSplice
            , hcInterpretedSplices = do
-               "linkToFocus" ?! focusSplice lens
-               "linkToBack" ?! backSplice
+               "linkToFocus" ## focusSplice lens
+               "linkToBack" ## backSplice
            }
 
 

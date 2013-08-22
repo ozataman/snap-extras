@@ -36,8 +36,8 @@ initFlashNotice
     :: HasHeist b 
     => Snaplet (Heist b) -> SnapletLens b SessionManager -> Initializer b v ()
 initFlashNotice h session = do
-    let splices = ("flash" ?! flashSplice session)
-        csplices = ("flash" ?! flashCSplice session)
+    let splices = ("flash" ## flashSplice session)
+        csplices = ("flash" ## flashCSplice session)
     addConfig h $ mempty { hcCompiledSplices = csplices
                          , hcInterpretedSplices = splices }
 
@@ -81,8 +81,8 @@ flashSplice session = do
     Just msg' -> do
       lift $ withTop session $ deleteFromSession k >> commitSession
       callTemplateWithText "_flash" $ do
-           "type" ?! typ'
-           "message" ?! msg'
+           "type" ## typ'
+           "message" ## msg'
 
 
 -------------------------------------------------------------------------------
@@ -97,8 +97,8 @@ flashCSplice session = do
         k = T.concat ["_", typ]
         splice getVal = do
             let ss = do
-                  "type" ?! return $ C.yieldPureText typ
-                  "message" ?! return $ C.yieldRuntimeText $ liftM fromJust
+                  "type" ## return $ C.yieldPureText typ
+                  "message" ## return $ C.yieldRuntimeText $ liftM fromJust
                                       $ getVal
             flashTemplate <- C.withLocalSplices ss
               noSplices (C.callTemplate "_flash")
