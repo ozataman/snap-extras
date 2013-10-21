@@ -22,12 +22,12 @@ import           Snap.Extras.CoreUtils
 import           Snap.Extras.FlashNotice
 import           Snap.Extras.FormUtils
 import           Snap.Extras.JSON
-import qualified Snap.Extras.SpliceUtils.Compiled as C
+import qualified Snap.Extras.SpliceUtils.Compiled    as C
 import qualified Snap.Extras.SpliceUtils.Interpreted as I
 import           Snap.Extras.Tabs
 import           Snap.Extras.TextUtils
 -------------------------------------------------------------------------------
-import Paths_snap_extras
+import           Paths_snap_extras
 -------------------------------------------------------------------------------
 
 
@@ -38,10 +38,10 @@ initExtras :: HasHeist b
            => Snaplet (Heist b)
            -> SnapletLens b SessionManager
            -> SnapletInit b ()
-initExtras heistSnaplet session = 
-  makeSnaplet 
-    "Snap Extras" 
-    "Collection of utilities for web applications" 
+initExtras heistSnaplet session =
+  makeSnaplet
+    "snap-extras"
+    "Collection of utilities for web applications"
     (Just getDataDir) $ do
       addTemplatesAt heistSnaplet "" . (</> "resources/templates")
         =<< getSnapletFilePath
