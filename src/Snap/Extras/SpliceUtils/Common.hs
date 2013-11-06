@@ -10,7 +10,7 @@ getScripts :: MonadIO m => FilePath -> m [String]
 getScripts d = do
     tree <- liftIO $ build d
     let files = F.foldMap ((:[]) . fst) $ zipPaths $ "" :/ free tree
-    return $ filter visibleScripts files
+    return $ sort $ filter visibleScripts files
   where
     visibleScripts fname =
         isSuffixOf ".js" fname && not (isPrefixOf "_" (takeFileName fname))

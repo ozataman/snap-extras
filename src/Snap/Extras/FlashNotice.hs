@@ -36,8 +36,8 @@ initFlashNotice
     :: HasHeist b 
     => Snaplet (Heist b) -> SnapletLens b SessionManager -> Initializer b v ()
 initFlashNotice h session = do
-    let splices = [ ("flash", flashSplice session) ]
-        csplices = [ ("flash", flashCSplice session) ]
+    let splices = ("flash" ## flashSplice session)
+        csplices = ("flash" ## flashCSplice session)
     addConfig h $ mempty { hcCompiledSplices = csplices
                          , hcInterpretedSplices = splices }
 
@@ -72,16 +72,17 @@ flashError session msg = withSession session $ with session $ setInSession "_err
 -- Ex: <flash type='success'/>
 flashSplice :: SnapletLens b SessionManager -> SnapletISplice b
 flashSplice session = do
-  typ <- liftM (getAttribute "type") getParamNode
-  let typ' = maybe "warning" id typ
-  let k = T.concat ["_", typ']
-  msg <- lift $ withTop session $ getFromSession k
-  case msg of 
-    Nothing -> return []
-    Just msg' -> do
-      lift $ withTop session $ deleteFromSession k >> commitSession
-      callTemplateWithText "_flash"
-           [ ("type", typ') , ("message", msg') ]
+    typ <- liftM (getAttribute "type") getParamNode
+    let typ' = maybe "warning" id typ
+    let k = T.concat ["_", typ']
+    msg <- lift $ withTop session $ getFromSession k
+    case msg of 
+      Nothing -> return []
+      Just msg' -> do
+        lift $ withTop session $ deleteFromSession k >> commitSession
+        callTemplateWithText "_flash" $ do
+             "type" ## typ'
+             "message" ## msg'
 
 
 -------------------------------------------------------------------------------
@@ -94,20 +95,22 @@ flashCSplice session = do
     n <- getParamNode
     let typ = maybe "warning" id $ getAttribute "type" n
         k = T.concat ["_", typ]
-        splice prom = do
-            flashTemplate <- C.withLocalSplices
-              [ ("type", return $ C.yieldPureText typ)
-              , ("message", return $ C.yieldRuntimeText $ liftM fromJust
-                                   $ C.getPromise prom) ]
-              [] (C.callTemplate "_flash")
-            return $ C.yieldRuntime $ do
-                msg <- C.getPromise prom
-                case msg of
-                  Nothing -> return mempty
-                  Just _ -> do
-                    lift $ withTop session $
-                      deleteFromSession k >> commitSession
-                    C.codeGen flashTemplate
-    C.defer splice (lift $ withTop session $ getFromSession k)
+        getVal = lift $ withTop session $ getFromSession k
+        ss = do
+          "type" ## return $ C.yieldPureText typ
+          "message" ## return $ C.yieldRuntimeText
+                              $ liftM (fromMaybe "Flash notice cookie error")
+                                getVal
+    flashTemplate <- C.withLocalSplices ss noSplices (C.callTemplate "_flash")
+    return $ C.yieldRuntime $ do
+        msg <- getVal
+        case msg of
+          Nothing -> return mempty
+          Just _ -> do
+            res <- C.codeGen flashTemplate
+            lift $ withTop session $ do
+              deleteFromSession k
+              commitSession
+            return res
 
 

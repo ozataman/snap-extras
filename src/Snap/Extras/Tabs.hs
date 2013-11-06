@@ -21,21 +21,22 @@ module Snap.Extras.Tabs
     ) where
 
 -------------------------------------------------------------------------------
+import qualified Blaze.ByteString.Builder as B
 import           Control.Error
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.Monoid
-import           Data.Text                 (Text)
-import qualified Data.Text                 as T
-import qualified Data.Text.Encoding        as T
+import           Data.Text                (Text)
+import qualified Data.Text                as T
+import qualified Data.Text.Encoding       as T
+import           Heist
+import qualified Heist.Compiled           as C
+import           Heist.Interpreted
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
-import           Heist
-import qualified Heist.Compiled            as C
-import           Heist.Interpreted
 import           Text.XmlHtml
-import qualified Text.XmlHtml              as X
+import qualified Text.XmlHtml             as X
 -------------------------------------------------------------------------------
 
 
@@ -43,8 +44,8 @@ import qualified Text.XmlHtml              as X
 -------------------------------------------------------------------------------
 initTabs :: HasHeist b => Snaplet (Heist b) -> Initializer b v ()
 initTabs h = do
-    let splices = [ ("tabs", tabsSplice) ]
-        csplices = [ ("tabs", tabsCSplice) ]
+    let splices = ("tabs" ## tabsSplice)
+        csplices = ("tabs" ## tabsCSplice)
     addConfig h $ mempty { hcCompiledSplices = csplices
                          , hcInterpretedSplices = splices }
 
@@ -60,9 +61,9 @@ tabsCSplice :: MonadSnap m => C.Splice m
 tabsCSplice = do
     n <- getParamNode
     let getCtx = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-        splices = [("tab", C.defer tabCSplice getCtx)]
+        splices = ("tab" ## tabCSplice getCtx)
     case n of
-      Element _ attrs ch -> C.withLocalSplices splices [] $
+      Element _ attrs ch -> C.withLocalSplices splices noSplices $
           C.runNode $ X.Element "ul" attrs ch
       _ -> error "tabs tag has to be an Element"
 
@@ -70,10 +71,11 @@ tabsCSplice = do
 ------------------------------------------------------------------------------
 -- | Can't use tabSpliceWorker because we have to explicitly run the
 -- attributes in order to get ${} splice substitution.
-tabCSplice :: Monad m => C.Promise Text -> C.Splice m
-tabCSplice promise = do
+tabCSplice :: Monad m => RuntimeSplice m Text -> C.Splice m
+tabCSplice getCtx = do
     (Element _ attrs ch) <- getParamNode
     attrsAction <- C.runAttributesRaw attrs
+    nodes <- C.codeGen `fmap` C.runNodeList ch
     let ps as context = do
           m <- note "tab must specify a 'match' attribute" $ lookup "match" as
           url <- note "tabs must specify a 'url' attribute" $ lookup "url" as
@@ -83,16 +85,18 @@ tabCSplice promise = do
             "Infix" -> Right $ url `T.isInfixOf` context
             "None" -> Right $ False
             _ -> Left "Unknown match type"
-          return (url, ch, m')
+          return (url, m')
     return $ C.yieldRuntime $ do
-        ctx <- C.getPromise promise
+        ctx <- getCtx
         as <- attrsAction
-        let res = case ps as ctx of
-              Left e -> error $ "Tab error: " ++ e
-              Right (url, c, match) ->
-                let attr' = if match then ("class", "active") : as else as
-                    a = X.Element "a" (("href", url) : as) c
-                 in X.renderHtmlFragment X.UTF8 [X.Element "li" attr' [a]]
+        ns <- nodes
+        let innerFrag = X.parseHTML "inner" $ B.toByteString ns
+        let res = either (error . ("Tab errror: " ++) ) id $ do
+                      (url, match) <- ps as ctx
+                      inner <- innerFrag
+                      let attr' = if match then ("class", "active") : as else as
+                          a = X.Element "a" (("href", url) : as) (X.docContent inner)
+                      return $ X.renderHtmlFragment X.UTF8 [X.Element "li" attr' [a]]
         return res
 
 
@@ -122,7 +126,7 @@ tabSpliceWorker _ _ = []
 tabsSplice :: MonadSnap m => Splice m
 tabsSplice = do
   context <- lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-  let bind = bindSplices [("tab", tabSplice context)]
+  let bind = bindSplices ("tab" ## tabSplice context)
   n <- getParamNode
   case n of
     Element _ attrs ch -> localHS bind $ runNodeList [X.Element "ul" attrs ch]
