@@ -1,6 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE QuasiQuotes               #-}
+{-# LANGUAGE TemplateHaskell           #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Snap.Extras.Ajax
@@ -39,13 +40,50 @@ import           Snap.Snaplet.Heist
 -------------------------------------------------------------------------------
 
 
--- | Replace innerHTML of given selector with given conntent.
-replaceWith :: Text -> ByteString -> JStat
-replaceWith selector bs =
+
+
+
+-- | Replace innerHTML of given selector with given conntent. Also
+-- update browser history and change the current URL.
+replaceWith
+    :: MonadSnap m
+    => Text
+    -- ^ jquery selector
+    -> ByteString
+    -- ^ content blob
+    -> m ()
+replaceWith selector bs = do
     let bs' = B.unpack bs
         sel = T.unpack selector
-    in [$jmacro| $(`(sel)`).html(`(bs')`); |]
 
+
+    req <- getRequest
+    let url = fromJustNote "No referer found in AJAX call" $
+              getHeader "Referer" req
+        q = rqQueryString req
+        qs = if B.null q then "" else B.append "?" q
+        full = B.unpack $ B.concat [url, qs]
+
+    jsResponse
+    writeBS $ B.pack $ show . renderJs $ replaceWithJs bs' sel full
+
+
+replaceWithJs :: String -> String -> String -> JStat
+replaceWithJs bs sel url = [jmacro|
+    var contents = `(bs)`;
+    var replace = function() { $(`(sel)`).html(contents); };
+    replace();
+
+    window.history.pushState({ 'repFun' : replace }, "", `(url)`);
+    var curPop = window.onpopstate;
+    window.onpopstate = \e {
+      if (e.repFun) {
+        e.repFun();
+      } else if (curPop) {
+        curPop(e);
+      }
+     }
+|]
 
 
 -------------------------------------------------------------------------------
@@ -64,18 +102,22 @@ replaceWithTemplate
 replaceWithTemplate nm sel = do
     (bld, _) <- maybeBadReq "Could not render a response." $
       withHeistState $ \ hs -> renderTemplate hs nm
-
     bld' <- bld
-    let js = show . renderJs $ replaceWith sel (toByteString bld')
-    modifyResponse $ setHeader "Content-Type" "application/javascript"
-    writeBS $ B.pack js
+    replaceWith sel (toByteString bld')
 
 
 
+-------------------------------------------------------------------------------
+-- | Possible reponse types we support at the moment. Can be expanded
+-- for more use cases like JSON, CSV and XML.
 data ResponseType = Html | Ajax
   deriving (Eq,Show,Read,Ord)
 
 
+-------------------------------------------------------------------------------
+-- | The multi-mime dispatcher. It will inspect the 'Accept' header
+-- and determine what type of a request this is. If AJAX, make sure to
+-- set the Accept header to 'application/javascript'.
 respond :: MonadSnap m => (ResponseType -> m b) -> m b
 respond f = do
     hs <- maybeBadReq "Accept header required for this handler" $
@@ -103,6 +145,4 @@ htmlOrAjax f g = respond $ \ ty -> case ty of
     Html -> f
     Ajax -> g
 
-
-test = renderJs $ replaceWith "#listing" "<strong>This is great</strong>"
 
