@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.8.1
+Version:             0.9
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description:         This package contains a collection of helper functions
                      that come in handy in most practical, real-world
@@ -19,9 +19,9 @@ data-files:
   resources/templates/*.tpl
 
 Library
-  -- Modules exported by the library.
   Exposed-modules:     
     Snap.Extras
+    Snap.Extras.Ajax
     Snap.Extras.CoreUtils
     Snap.Extras.CSRF
     Snap.Extras.TextUtils
@@ -61,8 +61,8 @@ Library
     , text                     >= 0.11  && < 0.12
     , transformers             >= 0.2   && < 0.4
     , xmlhtml                  >= 0.1.6 && < 0.3
+    , jmacro                   >= 0.6   && < 0.7
   
-  -- Other-modules:       
-
   ghc-options: -Wall -fwarn-tabs
+  default-language: Haskell2010
   

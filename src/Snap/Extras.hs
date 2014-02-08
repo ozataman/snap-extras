@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Snap.Extras
-    ( module Snap.Extras.CoreUtils
+    ( module Snap.Extras.Ajax
+    , module Snap.Extras.CoreUtils
     , module Snap.Extras.TextUtils
     , module Snap.Extras.JSON
     , module Snap.Extras.FlashNotice
@@ -18,6 +19,7 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           System.FilePath.Posix
 -------------------------------------------------------------------------------
+import           Snap.Extras.Ajax
 import           Snap.Extras.CoreUtils
 import           Snap.Extras.FlashNotice
 import           Snap.Extras.FormUtils
