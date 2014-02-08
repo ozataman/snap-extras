@@ -40,11 +40,7 @@ import           Snap.Snaplet.Heist
 -------------------------------------------------------------------------------
 
 
-
-
-
--- | Replace innerHTML of given selector with given conntent. Also
--- update browser history and change the current URL.
+-- | Replace innerHTML of given selector with given conntent.
 replaceWith
     :: MonadSnap m
     => Text
@@ -55,34 +51,17 @@ replaceWith
 replaceWith selector bs = do
     let bs' = B.unpack bs
         sel = T.unpack selector
-
-
-    req <- getRequest
-    let url = fromJustNote "No referer found in AJAX call" $
-              getHeader "Referer" req
-        q = rqQueryString req
-        qs = if B.null q then "" else B.append "?" q
-        full = B.unpack $ B.concat [url, qs]
-
     jsResponse
-    writeBS $ B.pack $ show . renderJs $ replaceWithJs bs' sel full
+    writeBS $ B.pack $ show . renderJs $ replaceWithJs bs' sel
 
 
-replaceWithJs :: String -> String -> String -> JStat
-replaceWithJs bs sel url = [jmacro|
+-- | Produce JS statement to replace a target's inner with given
+-- contents.
+replaceWithJs :: String -> String -> JStat
+replaceWithJs bs sel = [jmacro|
     var contents = `(bs)`;
     var replace = function() { $(`(sel)`).html(contents); };
     replace();
-
-    window.history.pushState({ 'repFun' : replace }, "", `(url)`);
-    var curPop = window.onpopstate;
-    window.onpopstate = \e {
-      if (e.repFun) {
-        e.repFun();
-      } else if (curPop) {
-        curPop(e);
-      }
-     }
 |]
 
 
