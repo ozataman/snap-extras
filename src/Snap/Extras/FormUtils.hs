@@ -212,7 +212,7 @@ editFormSplice formSplice getById = do
                               ----------------------------------
 
 
-dfHeistTemplate :: Monad m => Text -> FormTree m v m a -> m Markup
+dfHeistTemplate :: (Monad m, Monad n) => Text -> FormTree m v n a -> m Markup
 dfHeistTemplate name f =
     case f of
       Ref fName form ->
