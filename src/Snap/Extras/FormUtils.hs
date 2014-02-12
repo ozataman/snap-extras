@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE RecordWildCards           #-}
@@ -20,19 +21,28 @@ module Snap.Extras.FormUtils
     -- -- * Running/Displaying Forms
     -- , showForm
     -- , runViewForm'
+
+    -- * digestive-functors utilities
+    , dfHeistTemplate
     ) where
 
 -------------------------------------------------------------------------------
 import           Control.Error
-import qualified Data.ByteString.Char8 as B
+import           Control.Monad.Identity             (Identity, runIdentity)
+import qualified Data.ByteString.Char8              as B
+import           Data.Char                          (toUpper)
 import           Data.String
-import           Data.Text             (Text)
+import           Data.Text                          (Text)
+import qualified Data.Text                          as T
 import           Data.Text.Encoding
-import qualified Data.Text             as T
 import           Heist
 import           Snap.Core
+import           Text.Blaze.Html
+import           Text.Blaze.Internal                (MarkupM (..), attribute)
 import           Text.Digestive
-import qualified Text.XmlHtml           as X
+import           Text.Digestive.Form.Internal       (FormTree (..), toFormTree)
+import           Text.Digestive.Form.Internal.Field (Field (..))
+import qualified Text.XmlHtml                       as X
 -------------------------------------------------------------------------------
 
 
@@ -196,3 +206,55 @@ editFormSplice formSplice getById = do
         MaybeT (getById key)
 
 
+
+                              ----------------------------------
+                              -- digestive-functors utilities --
+                              ----------------------------------
+
+
+dfHeistTemplate :: Text -> Form v Identity a -> Markup
+dfHeistTemplate name form =
+    dfHeistTemplate' name (runIdentity $ toFormTree form)
+
+
+dfHeistTemplate' :: Text -> FormTree Identity v Identity a -> Markup
+dfHeistTemplate' name f =
+    case f of
+      Ref fName form ->
+        Append
+          (dfLabel (toHtml $ toTitle fName)
+            ! ref (fromString $ T.unpack fName))
+          (dfHeistTemplate' fName form)
+
+      Pure field -> genField field ! ref (fromString $ T.unpack name)
+
+      App form1 form2 -> Append (dfHeistTemplate' name form1)
+                                (dfHeistTemplate' name form2)
+
+      Map _ form -> dfHeistTemplate' name form
+
+      Monadic m -> dfHeistTemplate' name (runIdentity m)
+
+      List{} -> Empty -- TODO: to be completed ...
+
+      Metadata _ form ->
+        dfHeistTemplate' name form -- TODO: what to do with metadata?
+  where
+    dfLabel :: Markup -> Markup
+    dfLabel = Parent "dfLabel" "<dfLabel" "</dfLabel>"
+
+    dfInputText :: Markup
+    dfInputText = Leaf "dfInputText" "<dfInputText" ">"
+
+    ref :: AttributeValue -> Attribute
+    ref = attribute "ref" " ref=\""
+
+    genField :: Field v a -> Markup
+    genField Singleton{} = Empty
+    genField Text{} = dfInputText
+    genField _ = Empty -- TODO
+
+    toTitle :: Text -> Text
+    toTitle t
+      | T.length t == 0 = t
+      | otherwise       = toUpper (T.head t) `T.cons` T.tail t
