@@ -38,15 +38,15 @@ Library
 
   hs-source-dirs: src
   Build-depends:
-      aeson                    >= 0.6   && < 0.7
+      aeson                    >= 0.6   && < 0.8
     , base                     >= 4     && < 5
     , blaze-builder            >= 0.3   && < 0.4
-    , blaze-html               >= 0.6   && < 0.7
+    , blaze-html               >= 0.6   && < 0.8
     , bytestring               >= 0.9.1 && < 0.11
     , configurator             >= 0.2   && < 0.3
     , containers               >= 0.3   && < 0.6
     , data-default             >= 0.5   && < 0.6
-    , digestive-functors       >= 0.3   && < 0.7
+    , digestive-functors       >= 0.3   && < 0.8
     , digestive-functors-heist >= 0.8   && < 0.9
     , digestive-functors-snap  >= 0.3   && < 0.7
     , directory-tree           >= 0.10  && < 0.12
