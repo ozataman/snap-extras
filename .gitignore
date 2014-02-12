@@ -3,3 +3,5 @@ dist
 cabal-dev
 dist
 *.swp
+.cabal-sandbox
+cabal.sandbox.config
