@@ -28,7 +28,7 @@ module Snap.Extras.FormUtils
 
 -------------------------------------------------------------------------------
 import           Control.Error
-import           Control.Monad.Identity             (Identity, runIdentity)
+import           Control.Monad                      (liftM, liftM2)
 import qualified Data.ByteString.Char8              as B
 import           Data.Char                          (toUpper)
 import           Data.String
@@ -40,7 +40,7 @@ import           Snap.Core
 import           Text.Blaze.Html
 import           Text.Blaze.Internal                (MarkupM (..), attribute)
 import           Text.Digestive
-import           Text.Digestive.Form.Internal       (FormTree (..), toFormTree)
+import           Text.Digestive.Form.Internal       (FormTree (..))
 import           Text.Digestive.Form.Internal.Field (Field (..))
 import qualified Text.XmlHtml                       as X
 -------------------------------------------------------------------------------
@@ -212,33 +212,32 @@ editFormSplice formSplice getById = do
                               ----------------------------------
 
 
-dfHeistTemplate :: Text -> Form v Identity a -> Markup
-dfHeistTemplate name form =
-    dfHeistTemplate' name (runIdentity $ toFormTree form)
-
-
-dfHeistTemplate' :: Text -> FormTree Identity v Identity a -> Markup
-dfHeistTemplate' name f =
+dfHeistTemplate :: Monad m => Text -> FormTree m v m a -> m Markup
+dfHeistTemplate name f =
     case f of
       Ref fName form ->
-        Append
-          (dfLabel (toHtml $ toTitle fName)
-            ! ref (fromString $ T.unpack fName))
-          (dfHeistTemplate' fName form)
+        liftM (Append (dfLabel (toHtml $ toTitle fName)
+                         ! ref (fromString $ T.unpack fName)))
+              (dfHeistTemplate fName form)
 
-      Pure field -> genField field ! ref (fromString $ T.unpack name)
+      Pure field ->
+        return (genField field ! ref (fromString $ T.unpack name))
 
-      App form1 form2 -> Append (dfHeistTemplate' name form1)
-                                (dfHeistTemplate' name form2)
+      App form1 form2 ->
+        liftM2 Append (dfHeistTemplate name form1)
+                      (dfHeistTemplate name form2)
 
-      Map _ form -> dfHeistTemplate' name form
+      Map _ form ->
+        dfHeistTemplate name form
 
-      Monadic m -> dfHeistTemplate' name (runIdentity m)
+      Monadic m ->
+        m >>= dfHeistTemplate name
 
-      List{} -> Empty -- TODO: to be completed ...
+      List{} ->
+        return Empty -- TODO: to be completed ...
 
       Metadata _ form ->
-        dfHeistTemplate' name form -- TODO: what to do with metadata?
+        dfHeistTemplate name form -- TODO: what to do with metadata?
   where
     dfLabel :: Markup -> Markup
     dfLabel = Parent "dfLabel" "<dfLabel" "</dfLabel>"
