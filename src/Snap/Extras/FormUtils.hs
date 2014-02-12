@@ -243,7 +243,7 @@ dfHeistTemplate name f =
     dfLabel = Parent "dfLabel" "<dfLabel" "</dfLabel>"
 
     dfInputText :: Markup
-    dfInputText = Leaf "dfInputText" "<dfInputText" ">"
+    dfInputText = Leaf "dfInputText" "<dfInputText" "/>"
 
     ref :: AttributeValue -> Attribute
     ref = attribute "ref" " ref=\""
