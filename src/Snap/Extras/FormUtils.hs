@@ -236,7 +236,7 @@ dfHeistTemplate name f =
         m >>= dfHeistTemplate name
 
       List (DefaultList _ lst) _ -> do
-        lstBody <- mapM (dfHeistTemplate name) lst
+        lstBody <- mapM (liftM dfListItem . dfHeistTemplate name) lst
         return $ dfInputList (foldr Append Empty lstBody) ! ref refValue
 
       Metadata _ form ->
@@ -250,6 +250,9 @@ dfHeistTemplate name f =
 
     dfInputList :: Markup -> Markup
     dfInputList = Parent "dfInputList" "<dfInputList" "</dfInputList>"
+
+    dfListItem :: Markup -> Markup
+    dfListItem = Parent "dfListItem" "<dfListItem" "</dfListItem>"
 
     dfInputText :: Markup
     dfInputText = Leaf "dfInputText" "<dfInputText" "/>"
