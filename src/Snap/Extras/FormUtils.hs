@@ -42,6 +42,7 @@ import           Text.Blaze.Internal                (MarkupM (..), attribute)
 import           Text.Digestive
 import           Text.Digestive.Form.Internal       (FormTree (..))
 import           Text.Digestive.Form.Internal.Field (Field (..))
+import           Text.Digestive.Form.List           (DefaultList (..))
 import qualified Text.XmlHtml                       as X
 -------------------------------------------------------------------------------
 
@@ -221,7 +222,8 @@ dfHeistTemplate name f =
               (dfHeistTemplate fName form)
 
       Pure field ->
-        return (genField field ! ref (fromString $ T.unpack name))
+        return $ Append (genField field ! ref refValue)
+                        (dfErrorList ! ref refValue)
 
       App form1 form2 ->
         liftM2 Append (dfHeistTemplate name form1)
@@ -233,17 +235,36 @@ dfHeistTemplate name f =
       Monadic m ->
         m >>= dfHeistTemplate name
 
-      List{} ->
-        return Empty -- TODO: to be completed ...
+      List (DefaultList _ lst) _ -> do
+        lstBody <- mapM (dfHeistTemplate name) lst
+        return $ dfInputList (foldr Append Empty lstBody) ! ref refValue
 
       Metadata _ form ->
-        dfHeistTemplate name form -- TODO: what to do with metadata?
+        dfHeistTemplate name form
   where
+    refValue :: AttributeValue
+    refValue = fromString $ T.unpack name
+
     dfLabel :: Markup -> Markup
     dfLabel = Parent "dfLabel" "<dfLabel" "</dfLabel>"
 
+    dfInputList :: Markup -> Markup
+    dfInputList = Parent "dfInputList" "<dfInputList" "</dfInputList>"
+
     dfInputText :: Markup
     dfInputText = Leaf "dfInputText" "<dfInputText" "/>"
+
+    dfErrorList :: Markup
+    dfErrorList = Leaf "dfErrorList" "<dfErrorList" "/>"
+
+    dfInputCheckBox :: Markup
+    dfInputCheckBox = Leaf "dfInputCheckbox" "<dfInputCheckbox" "/>"
+
+    dfInputSelect :: Markup
+    dfInputSelect = Leaf "dfInputSelect" "<dfInputSelect" "/>"
+
+    dfInputFile :: Markup
+    dfInputFile = Leaf "dfInputFile" "<dfInputFile" "/>"
 
     ref :: AttributeValue -> Attribute
     ref = attribute "ref" " ref=\""
@@ -251,7 +272,9 @@ dfHeistTemplate name f =
     genField :: Field v a -> Markup
     genField Singleton{} = Empty
     genField Text{} = dfInputText
-    genField _ = Empty -- TODO
+    genField Bool{} = dfInputCheckBox
+    genField Choice{} = dfInputSelect
+    genField File{} = dfInputFile
 
     toTitle :: Text -> Text
     toTitle t
