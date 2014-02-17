@@ -214,36 +214,48 @@ editFormSplice formSplice getById = do
 
 
 dfHeistTemplate :: (Monad m, Monad n) => Text -> FormTree m v n a -> m Markup
-dfHeistTemplate name f =
-    case f of
-      Ref fName form ->
-        liftM (Append (dfLabel (toHtml $ toTitle fName)
-                         ! ref (fromString $ T.unpack fName)))
-              (dfHeistTemplate fName form)
-
-      Pure field ->
-        return $ Append (genField field ! ref refValue)
-                        (dfErrorList ! ref refValue)
-
-      App form1 form2 ->
-        liftM2 Append (dfHeistTemplate name form1)
-                      (dfHeistTemplate name form2)
-
-      Map _ form ->
-        dfHeistTemplate name form
-
-      Monadic m ->
-        m >>= dfHeistTemplate name
-
-      List (DefaultList _ lst) _ -> do
-        lstBody <- mapM (liftM dfListItem . dfHeistTemplate name) lst
-        return $ dfInputList (foldr Append Empty lstBody) ! ref refValue
-
-      Metadata _ form ->
-        dfHeistTemplate name form
+dfHeistTemplate formRef form =
+    liftM (toMarkup . (\b -> [header, b, footer])) $ body formRef form
   where
-    refValue :: AttributeValue
-    refValue = fromString $ T.unpack name
+    header :: Markup
+    header = toMarkup
+      [ dfIfChildErrors Empty, dfErrorList ! ref (refValue formRef) ]
+
+    body :: (Monad m, Monad n) => Text -> FormTree m v n a -> m Markup
+    body name f =
+      case f of
+        Ref fName form' ->
+          liftM (Append (dfLabel (toHtml $ toTitle fName)
+                           ! ref (fromString $ T.unpack fName)))
+                (body fName form')
+
+        Pure field ->
+          return $ Append (genField field ! ref (refValue name))
+                          (dfErrorList ! ref (refValue name))
+
+        App form1 form2 ->
+          liftM2 Append (body name form1)
+                        (body name form2)
+
+        Map _ form' ->
+          body name form'
+
+        Monadic m ->
+          m >>= body name
+
+        List (DefaultList _ lst) _ -> do
+          lstBody <- mapM (liftM dfListItem . body name) lst
+          return $ dfInputList (foldr Append Empty lstBody)
+                     ! ref (refValue name)
+
+        Metadata _ form' ->
+          body name form'
+
+    footer :: Markup
+    footer = dfInputSubmit
+
+    refValue :: Text -> AttributeValue
+    refValue = fromString . T.unpack
 
     dfLabel :: Markup -> Markup
     dfLabel = Parent "dfLabel" "<dfLabel" "</dfLabel>"
@@ -268,6 +280,12 @@ dfHeistTemplate name f =
 
     dfInputFile :: Markup
     dfInputFile = Leaf "dfInputFile" "<dfInputFile" "/>"
+
+    dfIfChildErrors :: Markup -> Markup
+    dfIfChildErrors = Parent "dfIfChildErrors" "<dfIfChildErrors" "</dfIfChildErrors>"
+
+    dfInputSubmit :: Markup
+    dfInputSubmit = Leaf "dfInputSubmit" "<dfInputSubmit" "/>"
 
     ref :: AttributeValue -> Attribute
     ref = attribute "ref" " ref=\""
