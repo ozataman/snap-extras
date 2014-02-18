@@ -1,6 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Snap.Extras.SpliceUtils.Compiled where
+module Snap.Extras.SpliceUtils.Compiled
+  ( utilSplices
+  , refererCSplice
+  , paramSplice
+  , scriptsSplice
+  , fancyLoopSplice
+  ) where
 
 -------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder.ByteString
@@ -15,6 +21,7 @@ import           Heist
 import           Heist.Compiled
 import           Heist.Compiled.LowLevel
 import           Text.XmlHtml
+import           Text.XmlHtml.Cursor
 -------------------------------------------------------------------------------
 
 
@@ -74,32 +81,53 @@ scriptsSplice d prefix = runNodeList =<< I.scriptsSplice d prefix
 -- with these situations can be a pain with the stock looping splices, so
 -- we've provided this helper that solves all of these problems.
 --
--- This function is similar to manyWithSplices, but it binds two additional
--- splices: \"whenNonempty\" and \"whenMultiple\".  The former only shows its
--- children when the list has 1 or more elements.  The latter only shows its
--- children when the list has more than 1 element.
+-- This function is similar to manyWithSplices, but it binds three additional
+-- splices: \"prelude\", \"interlude\", and \"postlude\".  The children of
+-- the prelude and postlude splices only show up before the beginning of the
+-- list and after the end of the list if the list is non-empty.  The
+-- children of the interlude splice are used as a separator between each list
+-- element.  If the list has only one element, then the separator does not
+-- appear.  These splices have this behavior regardless of where they appear
+-- in the parent tag.
 fancyLoopSplice :: Monad n
                 => Splices (RuntimeSplice n a -> Splice n)
                 -> RuntimeSplice n [a]
                 -> Splice n
 fancyLoopSplice splices action = do
+    n <- getParamNode
     p <- newEmptyPromise
-    q <- newEmptyPromise
-    let splices' = do
-          mapS ($ getPromise q) splices
-          "whenNonempty" ## checkPred (> 0) p
-          "whenMultiple" ## checkPred (> 1) p
 
-    chunks <- withLocalSplices splices' noSplices runChildren
+    let splices' = do
+          mapS ($ getPromise p) splices
+          "prelude" ## return mempty
+          "interlude" ## return mempty
+          "postlude" ## return mempty
+
+    preChunks <- findNamedChild n "prelude"
+    interChunks <- findNamedChild n "interlude"
+    postChunks <- findNamedChild n "postlude"
+
+    itemChunks <- withLocalSplices splices' noSplices runChildren
     return $ yieldRuntime $ do
         items <- action
-        putPromise p $ length items
-        res <- forM items $ \item -> putPromise q item >> codeGen chunks
-        return $ mconcat res
-  where
-    checkPred predicate p = do
-        chunks <- runChildren
-        return $ yieldRuntime $ do
-            len <- getPromise p
-            if predicate len then codeGen chunks else return mempty
+        case items of
+          [] -> return mempty
+          (i:is) -> do
+              pre <- codeGen preChunks
+              post <- codeGen postChunks
+
+              front <- putPromise p i >> codeGen itemChunks
+              body <- forM is $ \item -> do
+                  putPromise p item
+                  inter <- codeGen interChunks
+                  res <- codeGen itemChunks
+                  return $ inter <> res
+
+              return $ pre <> front <> mconcat body <> post
+
+
+findNamedChild :: Monad n => Node -> T.Text -> Splice n
+findNamedChild node name =
+    maybe (return mempty) (runNodeList .  childNodes . current) $
+      findChild (\c -> tagName (current c) == Just name) $ fromNode node
 
