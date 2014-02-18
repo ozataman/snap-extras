@@ -67,8 +67,15 @@ scriptsSplice d prefix = runNodeList =<< I.scriptsSplice d prefix
 
 
 ------------------------------------------------------------------------------
--- | Very similar to manyWithSplices, but this splice binds two additional
--- splices \"whenNonzero\" and \"whenMultiple\".  The former only shows its
+-- | Sometimes in a loop you don't always want the same behavior for every
+-- item.  If you have a comma separated list, you usually don't want a comma
+-- after the last item.  If you have a list surrounded by parentheses, you
+-- might not want the parentheses to show up if the list is empty.  Dealing
+-- with these situations can be a pain with the stock looping splices, so
+-- we've provided this helper that solves all of these problems.
+--
+-- This function is similar to manyWithSplices, but it binds two additional
+-- splices: \"whenNonempty\" and \"whenMultiple\".  The former only shows its
 -- children when the list has 1 or more elements.  The latter only shows its
 -- children when the list has more than 1 element.
 fancyLoopSplice :: Monad n
@@ -80,7 +87,7 @@ fancyLoopSplice splices action = do
     q <- newEmptyPromise
     let splices' = do
           mapS ($ getPromise q) splices
-          "whenNonzero" ## checkPred (> 0) p
+          "whenNonempty" ## checkPred (> 0) p
           "whenMultiple" ## checkPred (> 1) p
 
     chunks <- withLocalSplices splices' noSplices runChildren
