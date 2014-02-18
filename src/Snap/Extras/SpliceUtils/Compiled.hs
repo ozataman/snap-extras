@@ -4,6 +4,7 @@ module Snap.Extras.SpliceUtils.Compiled where
 
 -------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder.ByteString
+import           Control.Monad
 import           Control.Monad.Trans
 import           Data.Monoid
 import qualified Data.Text                 as T
@@ -12,6 +13,7 @@ import           Snap.Core
 import qualified Snap.Extras.SpliceUtils.Interpreted as I
 import           Heist
 import           Heist.Compiled
+import           Heist.Compiled.LowLevel
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
 
@@ -63,4 +65,34 @@ scriptsSplice :: MonadIO m
               -> Splice m
 scriptsSplice d prefix = runNodeList =<< I.scriptsSplice d prefix
 
+
+------------------------------------------------------------------------------
+-- | Very similar to manyWithSplices, but this splice binds two additional
+-- splices \"whenNonzero\" and \"whenMultiple\".  The former only shows its
+-- children when the list has 1 or more elements.  The latter only shows its
+-- children when the list has more than 1 element.
+fancyLoopSplice :: Monad n
+                => Splices (RuntimeSplice n a -> Splice n)
+                -> RuntimeSplice n [a]
+                -> Splice n
+fancyLoopSplice splices action = do
+    p <- newEmptyPromise
+    q <- newEmptyPromise
+    let splices' = do
+          mapS ($ getPromise q) splices
+          "whenNonzero" ## checkPred (> 0) p
+          "whenMultiple" ## checkPred (> 1) p
+
+    chunks <- withLocalSplices splices' noSplices runChildren
+    return $ yieldRuntime $ do
+        items <- action
+        putPromise p $ length items
+        res <- forM items $ \item -> putPromise q item >> codeGen chunks
+        return $ mconcat res
+  where
+    checkPred predicate p = do
+        chunks <- runChildren
+        return $ yieldRuntime $ do
+            len <- getPromise p
+            if predicate len then codeGen chunks else return mempty
 
