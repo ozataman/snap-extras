@@ -25,6 +25,7 @@ import qualified Blaze.ByteString.Builder as B
 import           Control.Error
 import           Control.Monad
 import           Control.Monad.Trans
+
 import           Data.Monoid
 import           Data.Text                (Text)
 import qualified Data.Text                as T
@@ -94,7 +95,9 @@ tabCSplice getCtx = do
         let res = either (error . ("Tab errror: " ++) ) id $ do
                       (url, match) <- ps as ctx
                       inner <- innerFrag
-                      let attr' = if match then ("class", "active") : as else as
+
+                      let actClass = maybe "active" (T.append "active " ) $ lookup "class" as
+                          attr' = if match then ("class", actClass) : as else as
                           a = X.Element "a" (("href", url) : as) (X.docContent inner)
                       return $ X.renderHtmlFragment X.UTF8 [X.Element "li" attr' [a]]
         return res
