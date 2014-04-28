@@ -12,7 +12,7 @@ Author:              Ozgun Ataman, Doug Beardsley
 Maintainer:          oz@soostone.com
 Category:            Web, Snap
 Build-type:          Simple
-Cabal-version:       >= 1.6
+Cabal-version:       >= 1.10
 
 
 data-files:
