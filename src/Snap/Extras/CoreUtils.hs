@@ -8,6 +8,7 @@ module Snap.Extras.CoreUtils
     , serverError
     , plainResponse
     , jsonResponse
+    , mpResponse
     , jsResponse
     , easyLog
     , getParam'
