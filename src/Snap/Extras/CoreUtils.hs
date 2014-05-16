@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Snap.Extras.CoreUtils
     ( finishEarly
@@ -24,12 +24,12 @@ module Snap.Extras.CoreUtils
     ) where
 
 -------------------------------------------------------------------------------
-import Control.Monad
-import Data.ByteString.Char8 (ByteString)
+import           Control.Monad
+import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
-import Data.Maybe
-import Safe
-import Snap.Core
+import           Data.Maybe
+import           Safe
+import           Snap.Core
 -------------------------------------------------------------------------------
 
 
@@ -37,7 +37,7 @@ import Snap.Core
 -------------------------------------------------------------------------------
 -- | Discard anything after this and return given status code to HTTP
 -- client immediately.
-finishEarly :: MonadSnap m => Int -> ByteString -> m b 
+finishEarly :: MonadSnap m => Int -> ByteString -> m b
 finishEarly code str = do
   modifyResponse $ setResponseStatus code str
   modifyResponse $ addHeader "Content-Type" "text/plain"
@@ -47,19 +47,19 @@ finishEarly code str = do
 
 -------------------------------------------------------------------------------
 -- | Finish early with error code 400
-badReq :: MonadSnap m => ByteString -> m b 
-badReq = finishEarly 400 
+badReq :: MonadSnap m => ByteString -> m b
+badReq = finishEarly 400
 
 
 -------------------------------------------------------------------------------
 -- | Finish early with error code 404
-notFound :: MonadSnap m => ByteString -> m b 
+notFound :: MonadSnap m => ByteString -> m b
 notFound = finishEarly 404
 
 
 -------------------------------------------------------------------------------
 -- | Finish early with error code 500
-serverError :: MonadSnap m => ByteString -> m b 
+serverError :: MonadSnap m => ByteString -> m b
 serverError = finishEarly 500
 
 
@@ -73,6 +73,11 @@ plainResponse = modifyResponse $ setHeader "Content-Type" "text/plain"
 -- | Mark response as 'application/json'
 jsonResponse :: MonadSnap m => m ()
 jsonResponse = modifyResponse $ setHeader "Content-Type" "application/json"
+
+-------------------------------------------------------------------------------
+-- | Mark response as 'application/x-msgpack'
+mpResponse :: MonadSnap m => m ()
+mpResponse = modifyResponse $ setHeader "Content-Type" "application/x-msgpack"
 
 
 -------------------------------------------------------------------------------
@@ -103,7 +108,7 @@ reqParam :: (MonadSnap m) => ByteString -> m ByteString
 reqParam s = do
   p <- getParam s
   maybe (badReq $ B.concat ["Required parameter ", s, " is missing."]) return p
- 
+
 
 -------------------------------------------------------------------------------
 -- | Read a parameter from request. Be sure it is readable if it's
@@ -116,7 +121,7 @@ readParam k = fmap (readNote "readParam failed" . B.unpack) `fmap` getParam k
 -- | Try to read a parameter from request. Computation may fail
 -- because the param is not there, or because it can't be read.
 readMayParam :: (MonadSnap m, Read a) => ByteString -> m (Maybe a)
-readMayParam k = do 
+readMayParam k = do
   p <- getParam k
   return $ readMay . B.unpack =<< p
 
@@ -134,7 +139,7 @@ redirectReferer = redirectRefererFunc (fromMaybe "/")
 redirectRefererFunc :: MonadSnap m => (Maybe ByteString -> ByteString) -> m b
 redirectRefererFunc f = do
     req <- getRequest
-    let referer = getHeader "Referer" req 
+    let referer = getHeader "Referer" req
     redirect $ f referer
 
 
@@ -166,7 +171,7 @@ maybeBadReq e f = fromMaybeM (badReq e) f
 
 
 -------------------------------------------------------------------------------
--- | Evaluates an action that returns a Maybe and 
+-- | Evaluates an action that returns a Maybe and
 fromMaybeM :: Monad m => m a -> m (Maybe a) -> m a
 fromMaybeM e f = maybe e return =<< f
 
