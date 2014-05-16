@@ -16,10 +16,9 @@ module Snap.Extras.MsgPack
 
 
 -------------------------------------------------------------------------------
-import qualified Data.ByteString.Char8      as B
-import qualified Data.ByteString.Lazy.Char8 as LB
+import qualified Data.ByteString.Char8 as B
 import           Data.Int
-import           Data.MessagePack           as MP
+import           Data.MessagePack      as MP
 import           Snap.Core
 -------------------------------------------------------------------------------
 import           Snap.Extras.CoreUtils
@@ -59,11 +58,7 @@ getBoundedMP
     => Int64
     -- ^ Maximum size in bytes
     -> m (Either String a)
-getBoundedMP n = do
-  bodyVal <- A.decode `fmap` readRequestBody n
-  return $ case bodyVal of
-    Nothing -> Left "Can't find MP data in POST body"
-    Just v -> tryUnpack v
+getBoundedMP n = tryUnpack `fmap` readRequestBody n
 
 -------------------------------------------------------------------------------
 -- | Get MP data from the given Param field
@@ -95,4 +90,4 @@ reqMPField fld = do
 writeMP :: (MonadSnap m, Packable a) => a -> m ()
 writeMP a = do
   mpResponse
-  writeBS . MP.pack $ a
+  writeLBS . MP.pack $ a
