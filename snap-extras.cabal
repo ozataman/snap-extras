@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.9
+Version:             0.9.1
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description:         This package contains a collection of helper functions
                      that come in handy in most practical, real-world
@@ -54,6 +54,7 @@ Library
     , filepath                 >= 1.1   && < 1.4
     , heist                    >= 0.13  && < 0.14
     , mtl                      >= 2.0   && < 2.3
+    , pcre-light               >= 0.4   && < 0.5
     , readable                 >= 0.1   && < 0.3
     , safe                     >= 0.3   && < 0.4
     , snap                     >= 0.13  && < 0.14

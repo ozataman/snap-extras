@@ -3,3 +3,4 @@
 :set -hide-package monads-fd
 :set -hide-package monads-tf
 :set -hide-package resource-pool-catchio
+:set -XOverloadedStrings

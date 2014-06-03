@@ -36,6 +36,7 @@ import           Heist.Interpreted
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import           Text.Regex.PCRE.Light
 import           Text.XmlHtml
 import qualified Text.XmlHtml             as X
 -------------------------------------------------------------------------------
@@ -84,6 +85,9 @@ tabCSplice getCtx = do
             "Exact" -> Right $ url == context
             "Prefix" -> Right $ url `T.isPrefixOf` context
             "Infix" -> Right $ url `T.isInfixOf` context
+            "Regex" -> do
+                let r = compile (T.encodeUtf8 url) []
+                Right $ isJust $ match r (T.encodeUtf8 context) []
             "None" -> Right $ False
             _ -> Left "Unknown match type"
           return (url, m')
@@ -119,6 +123,9 @@ tabSpliceWorker n@(Element _ attrs ch) context =
         "Exact" -> Right $ url == context
         "Prefix" -> Right $ url `T.isPrefixOf` context
         "Infix" -> Right $ url `T.isInfixOf` context
+        "Regex" -> do
+            let r = compile (T.encodeUtf8 url) []
+            Right $ isJust $ match r (T.encodeUtf8 context) []
         "None" -> Right $ False
         _ -> Left "Unknown match type"
       return (url, ch, m')
