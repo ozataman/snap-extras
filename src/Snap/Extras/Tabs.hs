@@ -86,7 +86,8 @@ tabCSplice getCtx = do
             "Prefix" -> Right $ url `T.isPrefixOf` context
             "Infix" -> Right $ url `T.isInfixOf` context
             "Regex" -> do
-                let r = compile (T.encodeUtf8 url) []
+                pat <- note "regex tabs must specify a 'pat' attribute" $ lookup "pat" as
+                let r = compile (T.encodeUtf8 pat) []
                 Right $ isJust $ match r (T.encodeUtf8 context) []
             "None" -> Right $ False
             _ -> Left "Unknown match type"
@@ -97,34 +98,35 @@ tabCSplice getCtx = do
         ns <- nodes
         let innerFrag = X.parseHTML "inner" $ B.toByteString ns
         let res = either (error . ("Tab errror: " ++) ) id $ do
-                      (url, match) <- ps as ctx
+                      (url, matches) <- ps as ctx
                       inner <- innerFrag
 
                       let actClass = maybe "active" (T.append "active " ) $ lookup "class" as
-                          attr' = if match then ("class", actClass) : as else as
+                          attr' = if matches then ("class", actClass) : as else as
                           a = X.Element "a" (("href", url) : as) (X.docContent inner)
                       return $ X.renderHtmlFragment X.UTF8 [X.Element "li" attr' [a]]
         return res
 
 
 tabSpliceWorker :: Node -> Text -> [Node]
-tabSpliceWorker n@(Element _ attrs ch) context =
+tabSpliceWorker (Element _ attrs ch) context =
     case ps of
       Left e -> error $ "Tab error: " ++ e
-      Right (url, c, match) ->
-        let attr' = if match then ("class", "active") : attrs else attrs
+      Right (url, c, matches) ->
+        let attr' = if matches then ("class", "active") : attrs else attrs
             a = X.Element "a" (("href", url) : attrs) c
          in [X.Element "li" attr' [a]]
   where
     ps = do
       m <- note "tab must specify a 'match' attribute" $ lookup "match" attrs
-      url <- note "tabs must specify a 'url' attribute" $ getAttribute "url" n
+      url <- note "tabs must specify a 'url' attribute" $ lookup "url" attrs
       m' <- case m of
         "Exact" -> Right $ url == context
         "Prefix" -> Right $ url `T.isPrefixOf` context
         "Infix" -> Right $ url `T.isInfixOf` context
         "Regex" -> do
-            let r = compile (T.encodeUtf8 url) []
+            pat <- note "regex tabs must specify a 'pat' attribute" $ lookup "pat" attrs
+            let r = compile (T.encodeUtf8 pat) []
             Right $ isJust $ match r (T.encodeUtf8 context) []
         "None" -> Right $ False
         _ -> Left "Unknown match type"
