@@ -1,6 +1,5 @@
 <jobStatus>
   <ifRunning>
-    <img src="/loading.gif"/>
     <elapsedSeconds/> seconds elapsed
 
     <div class="progress">
