@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.9.1
+Version:             0.9.2
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description:         This package contains a collection of helper functions
                      that come in handy in most practical, real-world
@@ -22,16 +22,17 @@ Library
   Exposed-modules:     
     Snap.Extras
     Snap.Extras.Ajax
-    Snap.Extras.CoreUtils
     Snap.Extras.CSRF
-    Snap.Extras.TextUtils
-    Snap.Extras.JSON
+    Snap.Extras.CoreUtils
     Snap.Extras.FlashNotice
+    Snap.Extras.FormUtils
+    Snap.Extras.JSON
+    Snap.Extras.NavTrails
+    Snap.Extras.PollStatus
     Snap.Extras.SpliceUtils.Compiled
     Snap.Extras.SpliceUtils.Interpreted
-    Snap.Extras.FormUtils
     Snap.Extras.Tabs
-    Snap.Extras.NavTrails
+    Snap.Extras.TextUtils
   other-modules:
     Snap.Extras.SpliceUtils.Common
     Paths_snap_extras
@@ -53,6 +54,7 @@ Library
     , errors                   >= 1.4   && < 1.5
     , filepath                 >= 1.1   && < 1.4
     , heist                    >= 0.13  && < 0.14
+    , jmacro                   >= 0.6   && < 0.7
     , mtl                      >= 2.0   && < 2.3
     , pcre-light               >= 0.4   && < 0.5
     , readable                 >= 0.1   && < 0.3
@@ -60,9 +62,10 @@ Library
     , snap                     >= 0.13  && < 0.14
     , snap-core                >= 0.7   && < 0.10
     , text                     >= 0.11  && < 1.2
+    , time                     >= 1.4   && < 1.5
     , transformers             >= 0.2   && < 0.5
+    , wl-pprint-text           >= 1.1   && < 1.2
     , xmlhtml                  >= 0.1.6 && < 0.3
-    , jmacro                   >= 0.6   && < 0.7
   
   ghc-options: -Wall -fwarn-tabs
   default-language: Haskell2010
