@@ -4,3 +4,4 @@ cabal-dev
 dist
 *.swp
 TAGS
+poll-example/log
