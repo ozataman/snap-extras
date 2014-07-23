@@ -39,7 +39,7 @@ Library
 
   hs-source-dirs: src
   Build-depends:
-      aeson                    >= 0.6   && < 0.8
+      aeson                    >= 0.6   && < 0.9
     , base                     >= 4     && < 5
     , blaze-builder            >= 0.3   && < 0.4
     , blaze-html               >= 0.6   && < 0.8
@@ -50,7 +50,7 @@ Library
     , digestive-functors       >= 0.3   && < 0.8
     , digestive-functors-heist >= 0.8   && < 0.9
     , digestive-functors-snap  >= 0.3   && < 0.7
-    , directory-tree           >= 0.10  && < 0.12
+    , directory-tree           >= 0.10  && < 0.13
     , errors                   >= 1.4   && < 1.5
     , filepath                 >= 1.1   && < 1.4
     , heist                    >= 0.13  && < 0.14
