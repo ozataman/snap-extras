@@ -102,8 +102,6 @@ import           Control.Applicative
 import           Control.Error
 import           Control.Monad.Trans
 import           Data.ByteString                (ByteString)
-import qualified Data.ByteString.Char8          as B
-import           Data.Maybe
 import           Data.Monoid
 import           Data.Readable
 import           Data.Text
@@ -112,15 +110,11 @@ import           Data.Text.Encoding
 import           Data.Time
 import           Heist
 import           Heist.Compiled
-import           Heist.SpliceAPI
 import           Heist.Splices
 import           Language.Javascript.JMacro
-import           Safe
 import           Snap.Core
-import           Snap.Extras.CoreUtils
 import           Snap.Snaplet
-import           Snap.Snaplet.Heist.Compiled    (HasHeist, render,
-                                                 withHeistState)
+import           Snap.Snaplet.Heist.Compiled    (HasHeist)
 import           Text.PrettyPrint.Leijen.Text   (renderOneLine)
 import qualified Text.XmlHtml                   as X
 ------------------------------------------------------------------------------
