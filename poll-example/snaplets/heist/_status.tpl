@@ -1,4 +1,4 @@
-<jobStatus>
+<jobStatus interval="300">
   <ifRunning>
     <elapsedSeconds/> seconds elapsed
 
@@ -18,7 +18,4 @@
       </div>
     </div>
   </ifFinished>
-  <ifNotFinished>
-    <jobUpdateJs interval="300" jobId="${jobId}"/>
-  </ifNotFinished>
 </jobStatus>

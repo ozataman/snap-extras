@@ -119,7 +119,6 @@ main = do
 -- type of job you need status for.
 splices = do
     "jobId" ## jobIdSplice
-    "jobUpdateJs" ## updateSplice
     -- You need one of these status splices per status job type
     "jobStatus" ## statusSplice getMyJobStatus
 

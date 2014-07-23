@@ -13,13 +13,10 @@
       <h1>Status</h1>
       <div class="row">
         <div class="statusdiv col-md-4">
+          <apply template="_status"/>
         </div>
       </div>
     </div>
-    <script>
-      console.log(window.location.href);
-    </script>
-    <jobUpdateJs interval="50" jobId="${jobId}"/>
   </body>
 </html>
 
