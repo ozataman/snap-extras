@@ -93,7 +93,18 @@ return markup that contains something like this:
 
 -}
 
-module Snap.Extras.PollStatus where
+module Snap.Extras.PollStatus
+  ( jobsHandler
+  , jobIdSplice
+  , statusSplice
+  , JobId
+  , JobState(..)
+  , isFinished
+  , Status(..)
+  , statusPercentCompleted
+  , statusElapsed
+  , statusSplices
+  ) where
 
 ------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder
@@ -230,12 +241,12 @@ isFinished _ = False
 ------------------------------------------------------------------------------
 -- | The complete status of a job.
 data Status = Status
-    { srStartTime       :: UTCTime
-    , srJobState        :: JobState
-    , srEndTime         :: Maybe UTCTime
-    , srMessages        :: [Text]
-    , srAmountCompleted :: Double
-    , srAmountTotal     :: Double
+    { statusStartTime       :: UTCTime
+    , statusJobState        :: JobState
+    , statusEndTime         :: Maybe UTCTime
+    , statusMessages        :: [Text]
+    , statusAmountCompleted :: Double
+    , statusAmountTotal     :: Double
     }
 
 
@@ -243,7 +254,7 @@ data Status = Status
 -- | Calculates the percent completed as an Int.
 statusPercentCompleted :: Status -> Int
 statusPercentCompleted Status{..} =
-    round $ 100.0 * srAmountCompleted / srAmountTotal
+    round $ 100.0 * statusAmountCompleted / statusAmountTotal
 
 
 ------------------------------------------------------------------------------
@@ -257,21 +268,21 @@ statusSplices
     :: Monad n
     => Splices (RuntimeSplice n StatusData -> Splice n)
 statusSplices = do
-    "ifPending" ## ifCSplice ((==Pending) . srJobState . sdStatus)
-    "ifRunning" ## ifCSplice ((==Running) . srJobState . sdStatus)
-    "ifNotFinished" ## ifCSplice (not . isFinished . srJobState . sdStatus)
-    "ifFinished" ## ifCSplice (isFinished . srJobState . sdStatus)
-    "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . srJobState . sdStatus)
-    "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . srJobState . sdStatus)
+    "ifPending" ## ifCSplice ((==Pending) . statusJobState . sdStatus)
+    "ifRunning" ## ifCSplice ((==Running) . statusJobState . sdStatus)
+    "ifNotFinished" ## ifCSplice (not . isFinished . statusJobState . sdStatus)
+    "ifFinished" ## ifCSplice (isFinished . statusJobState . sdStatus)
+    "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . statusJobState . sdStatus)
+    "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . statusJobState . sdStatus)
     mapS pureSplice $ do
-      "elapsedSeconds" ## textSplice (tshow . getElapsed)
-      "startTime" ## textSplice (tshow . srStartTime . sdStatus)
-      "endTime" ## textSplice (tshow . srEndTime . sdStatus)
-      "jobState" ## textSplice (tshow . srJobState  . sdStatus)
-      "messages" ## textSplice (tshow . srMessages . sdStatus)
+      "elapsedSeconds" ## textSplice (tshow . statusElapsed)
+      "startTime" ## textSplice (tshow . statusStartTime . sdStatus)
+      "endTime" ## textSplice (tshow . statusEndTime . sdStatus)
+      "jobState" ## textSplice (tshow . statusJobState  . sdStatus)
+      "messages" ## textSplice (tshow . statusMessages . sdStatus)
       "percentCompleted" ## textSplice (tshow . statusPercentCompleted . sdStatus)
-      "amountCompleted" ## textSplice (tshow . srAmountCompleted . sdStatus)
-      "amountTotal" ## textSplice (tshow . srAmountTotal . sdStatus)
+      "amountCompleted" ## textSplice (tshow . statusAmountCompleted . sdStatus)
+      "amountTotal" ## textSplice (tshow . statusAmountTotal . sdStatus)
 
       -- I didn't mention this splice in the docs because I always add it onto
       -- the end of the status splice children, so the end user should never
@@ -280,15 +291,15 @@ statusSplices = do
   where
     internalUpdate :: StatusData -> Builder
     internalUpdate StatusData{..} =
-        if not $ isFinished $ srJobState sdStatus
+        if not $ isFinished $ statusJobState sdStatus
           then BB.fromText sdJs
           else mempty
 
 
 ------------------------------------------------------------------------------
-getElapsed :: StatusData -> Int
-getElapsed StatusData{..} =
-    round $ diffUTCTime sdTimestamp (srStartTime sdStatus)
+statusElapsed :: StatusData -> Int
+statusElapsed StatusData{..} =
+    round $ diffUTCTime sdTimestamp (statusStartTime sdStatus)
 
 
 ------------------------------------------------------------------------------
