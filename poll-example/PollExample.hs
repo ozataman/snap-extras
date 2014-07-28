@@ -55,8 +55,8 @@ updateJob jobId f repo = (JobRepo (repoNextInd repo) newJobs, ())
   where
     curJobs = repoJobs repo
     newJobs = M.update (g . f) jobId curJobs
-    g s = if srAmountCompleted s == srAmountTotal s
-            then Just $ s { srJobState = FinishedSuccess }
+    g s = if statusAmountCompleted s == statusAmountTotal s
+            then Just $ s { statusJobState = FinishedSuccess }
             else Just s
 
 jobAction
@@ -88,8 +88,7 @@ makeLenses ''App
 instance HasHeist App where
     heistLens = subSnaplet heist
 
-routes = [ ("hello", writeText "hello world")
-         , ("myjobs", myJobsHandler)
+routes = [ ("myjobs", myJobsHandler)
          , ("", heistServe)
          , ("", serveDirectory "static")
          ]

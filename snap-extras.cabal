@@ -17,6 +17,12 @@ Cabal-version:       >= 1.10
 
 data-files:
   resources/templates/*.tpl
+  poll-example/PollExample.hs
+  poll-example/snaplets/heist/*.tpl
+
+Flag Examples
+  Description: Build the examples.
+  Default: False
 
 Library
   Exposed-modules:     
@@ -69,4 +75,30 @@ Library
   
   ghc-options: -Wall -fwarn-tabs
   default-language: Haskell2010
-  
+
+Executable PollExample
+  Main-is: PollExample.hs
+  Hs-source-dirs: poll-example
+
+  if !flag(Examples)
+    Buildable: False
+  else
+    Buildable: True
+    Build-depends:
+        aeson
+      , base == 4.*
+      , containers
+      , heist
+      , lens
+      , mtl
+      , readable
+      , snap
+      , snap-core
+      , snap-extras
+      , snap-server
+      , text
+      , time
+      , transformers
+
+  Default-Language: Haskell2010
+
