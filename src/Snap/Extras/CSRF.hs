@@ -6,10 +6,10 @@ module Snap.Extras.CSRF where
 import qualified Data.ByteString.Char8 as B
 import           Data.Text             (Text)
 import qualified Data.Text.Encoding    as T
-import           Snap
-import           Snap.Snaplet.Session
 import           Heist
 import           Heist.Interpreted
+import           Snap
+import           Snap.Snaplet.Session
 import qualified Text.XmlHtml          as X
 ------------------------------------------------------------------------------
 
@@ -75,11 +75,13 @@ blanketCSRF :: SnapletLens v SessionManager
             -> Handler b v ()
             -- ^ Handler to run if the CSRF check fails
             -> Handler b v ()
-blanketCSRF session onFailure = do
+            -- ^ Handler to let through when successful.
+            -> Handler b v ()
+blanketCSRF session onFailure onSucc = do
     h <- getHeader "Content-type" `fmap` getRequest
     case maybe False (B.isInfixOf "multipart/form-data") h of
       True -> return ()
-      False -> handleCSRF session onFailure
+      False -> handleCSRF session onFailure onSucc
 
 
 ------------------------------------------------------------------------------
@@ -91,13 +93,28 @@ handleCSRF :: SnapletLens v SessionManager
            -> Handler b v ()
            -- ^ Handler to run on failure
            -> Handler b v ()
-handleCSRF session onFailure = do
+           -- ^ Handler to let through when successful.
+           -> Handler b v ()
+handleCSRF session onFailure onSucc = do
     m <- getsRequest rqMethod
-    if m /= POST
-      then return ()
-      else do tok <- getParam "_csrf"
-              realTok <- with session csrfToken
-              if tok == Just (T.encodeUtf8 realTok)
-                then return ()
-                else onFailure >> getResponse >>= finishWith
+    case m /= POST of
+      True ->  onSucc
+      False -> do
+        tok <- getParam "_csrf"
+        realTok <- with session csrfToken
+        if tok == Just (T.encodeUtf8 realTok)
+          then onSucc
+          else onFailure >> getResponse >>= finishWith
+
+
+-------------------------------------------------------------------------------
+-- | A version of 'handleCSRF' that works as an imperative filter.
+-- It's a NOOP when successful, redirs to oblivion under failure.
+handleCSRF'
+    :: SnapletLens v SessionManager
+    -> Handler b v ()
+    -- ^ On failure
+    -> Handler b v ()
+handleCSRF' ses fail = handleCSRF ses fail (return ())
+
 
