@@ -2,12 +2,13 @@
 
 module Snap.Extras
     ( module Snap.Extras.Ajax
+    , module Snap.Extras.CSRF
     , module Snap.Extras.CoreUtils
-    , module Snap.Extras.TextUtils
-    , module Snap.Extras.JSON
     , module Snap.Extras.FlashNotice
     , module Snap.Extras.FormUtils
+    , module Snap.Extras.JSON
     , module Snap.Extras.Tabs
+    , module Snap.Extras.TextUtils
     , initExtras
     ) where
 
