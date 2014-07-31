@@ -22,6 +22,7 @@ import           System.FilePath.Posix
 -------------------------------------------------------------------------------
 import           Snap.Extras.Ajax
 import           Snap.Extras.CoreUtils
+import           Snap.Extras.CSRF
 import           Snap.Extras.FlashNotice
 import           Snap.Extras.FormUtils
 import           Snap.Extras.JSON
