@@ -78,9 +78,9 @@ blanketCSRF :: SnapletLens v SessionManager
             -- ^ Handler to let through when successful.
             -> Handler b v ()
 blanketCSRF session onFailure onSucc = do
-    h <- getHeader "Content-type" `fmap` getRequest
+    h <- getHeader "content-type" `fmap` getRequest
     case maybe False (B.isInfixOf "multipart/form-data") h of
-      True -> return ()
+      True -> onSucc
       False -> handleCSRF session onFailure onSucc
 
 
