@@ -221,7 +221,7 @@ type JobId = Text
 ------------------------------------------------------------------------------
 -- | Enumeration of the states a job can be in.
 data JobState = Pending | Running | FinishedSuccess | FinishedFailure
-  deriving (Show,Eq)
+  deriving (Eq,Show,Read,Enum)
 
 
 ------------------------------------------------------------------------------
@@ -241,7 +241,7 @@ data Status = Status
     , statusMessages        :: [Text]
     , statusAmountCompleted :: Double
     , statusAmountTotal     :: Double
-    }
+    } deriving (Eq,Show)
 
 
 ------------------------------------------------------------------------------
