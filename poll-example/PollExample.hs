@@ -88,7 +88,8 @@ makeLenses ''App
 instance HasHeist App where
     heistLens = subSnaplet heist
 
-routes = [ ("myjobs", myJobsHandler)
+routes = [ ("startJob", startlongjob)
+         , ("myJobStatus", jobStatusHandler "_status" ".statusdiv")
          , ("", heistServe)
          , ("", serveDirectory "static")
          ]
@@ -117,37 +118,34 @@ main = do
 -- first two are static.  You'll need an instance of the third one for each
 -- type of job you need status for.
 splices = do
-    "jobId" ## jobIdSplice
     -- You need one of these status splices per status job type
-    "jobStatus" ## statusSplice getMyJobStatus
+    "jobStatus" ## statusSplice getUrl getMyJobStatus
+  where
+    getUrl = do
+        jobId <- getParam "jobId"
+        return $ fmap (T.decodeUtf8 . ("myJobStatus?jobId=" <>)) jobId
 
 
 ------------------------------------------------------------------------------
 -- | Starts a job and returns its job ID.
-startlongjob :: Handler App App T.Text
+startlongjob :: Handler App App ()
 startlongjob = do
     ref <- gets _repo
     ts <- liftIO getCurrentTime
     jobId <- liftIO $ atomicModifyIORef' ref (newJob ts)
     liftIO $ forkIO $ jobAction ref jobId ts 10
-    return $ T.pack $ show jobId
-
-
-------------------------------------------------------------------------------
--- | This is the main handler that you add to your app routes.
-myJobsHandler :: Handler App App ()
-myJobsHandler = do
-    jobsHandler startlongjob (render "jobstatus") "_status" ".statusdiv"
+    redirect $ T.encodeUtf8 $ "jobstatus?jobId=" <> (T.pack $ show jobId)
 
 
 ------------------------------------------------------------------------------
 -- | A function that gets the status of a job.
-getMyJobStatus :: T.Text -> Handler App App (Maybe Status)
-getMyJobStatus jid = do
+getMyJobStatus :: Handler App App (Maybe Status)
+getMyJobStatus = do
     ref <- gets _repo
     repo <- liftIO $ readIORef ref
+    mjidbs <- getParam "jobId"
     return $ do
-        jobId <- fromText jid
+        jobId <- fromBS =<< mjidbs
         M.lookup jobId (repoJobs repo)
 
 

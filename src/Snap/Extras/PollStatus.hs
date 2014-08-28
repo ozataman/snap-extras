@@ -45,9 +45,6 @@ You need to bind this splice once for each type of action that you are
 polling, each with its own splice name and function for getting the job
 status.
 
-There is an optional jobIdSplice available if you need direct access to the
-job ID in templates, but this should not be needed for normal use.
-
 The third argument to jobsHandler is the template that will be rendered for
 status update requests.  It will typically be not much more than a
 @\<myJobStatus\>@ tag enclosing the custom markup for displaying your job status.
@@ -77,11 +74,9 @@ Here's an example using a bootstrap progress bar:
 >   </ifFinished>
 > </myJobStatus>
 
-This will poll for updates every 300 milliseconds.  By default the myJobStatus
-splice gets the job ID from the \"jobId\" param.  You can override this by
-specifying a \"jobId\" attribute in the myJobStatus tag.  See the
-documentation for 'statusSplice' for more information about the splices
-available to you inside the @\<myJobStatus\>@ tag.
+This will poll for updates every 300 milliseconds.  See the documentation for
+'statusSplice' for more information about the splices available to you inside
+the @\<myJobStatus\>@ tag.
 
 To get the above code working, you would have the myJobStatusPage handler
 return markup that contains something like this:
@@ -94,10 +89,8 @@ return markup that contains something like this:
 -}
 
 module Snap.Extras.PollStatus
-  ( jobsHandler
-  , jobIdSplice
+  ( jobStatusHandler
   , statusSplice
-  , JobId
   , JobState(..)
   , isFinished
   , Status(..)
@@ -109,15 +102,14 @@ module Snap.Extras.PollStatus
 ------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder
 import qualified Blaze.ByteString.Builder.Char8 as BB
-import           Control.Applicative
 import           Control.Error
+import           Control.Monad
 import           Control.Monad.Trans
 import           Data.ByteString                (ByteString)
 import           Data.Monoid
 import           Data.Readable
 import           Data.Text
 import qualified Data.Text                      as T
-import           Data.Text.Encoding
 import           Data.Time
 import           Heist
 import           Heist.Compiled
@@ -136,39 +128,16 @@ import           Snap.Extras.Ajax
 ------------------------------------------------------------------------------
 -- | Top-level handler that sets up routes for the job polling infrastructure.
 -- This handler sets up three sub-routes: start, status, and updateStatus.
-jobsHandler
+jobStatusHandler
     :: HasHeist b
-    => Handler b b JobId
-    -- ^ Handler that starts a job and returns a unique JobId.
-    -> Handler b b ()
-    -- ^ Handler for the status page.  This handler gets called with the
-    -- \"jobId\" query string param set to the job id returned from the job
-    -- start handler.
-    -> ByteString
+    => ByteString
     -- ^ Name of the template to use for the updateStatus endpoint.
     -> T.Text
     -- ^ A CSS selector string used to substitute the contents of the AJAX
     -- template into the status page.
     -> Handler b b ()
-jobsHandler startJob statusPageHandler updateTemplate selector = do
-    route [ ("start", startHandler)
-          , ("status", statusPageHandler)
-          , ("updateStatus", updater)
-          ]
-  where
-    startHandler = do
-        jobId <- startJob
-        redirect $ encodeUtf8 $ "status?jobId=" <> jobId
-    updater = replaceWithTemplate updateTemplate selector
-
-
-------------------------------------------------------------------------------
--- | A simple convenience splice to standardize the way templates get job IDs.
--- This splice gets the job ID from the request param \"jobId\".
-jobIdSplice :: Splice (Handler b b)
-jobIdSplice = return $ yieldRuntimeText $ lift $ do
-    bs <- getParam "jobId"
-    return $ maybe "" decodeUtf8 bs
+jobStatusHandler updateTemplate selector =
+    replaceWithTemplate updateTemplate selector
 
 
 ------------------------------------------------------------------------------
@@ -193,9 +162,16 @@ data StatusData = StatusData
 -- amountCompleted, amountTotal
 statusSplice
     :: MonadSnap n
-    => (T.Text -> n (Maybe Status))
+    => n (Maybe Text)
+    -- ^ Handler to get the URL that should be used for requesting AJAX status
+    -- updates.  This must be a handler because it will usually contain some
+    -- form of job ID that is only obtainable at runtime.
+    -> n (Maybe Status)
+    -- ^ Handler that knows how to get the status of the job in question.
+    -- This typically will require it to know how to get some sort of job ID
+    -- from the request.
     -> Splice n
-statusSplice getReport = do
+statusSplice getUrl getStatus = do
     n <- getParamNode
     runAttrs <- runAttributesRaw $ X.elementAttrs n
 
@@ -205,17 +181,11 @@ statusSplice getReport = do
         attrs <- runAttrs
         ts <- liftIO getCurrentTime
         let delay = fromMaybe 1000 $ fromText =<< lookup "interval" attrs
-            mjobId = lookup "jobId" attrs
         runMaybeT $ do
-            jobId <- maybe (decodeUtf8 <$> MaybeT (lift $ getParam "jobId"))
-                           return mjobId
-            let js = T.concat ["<script>", updateJS jobId delay, "</script>"]
-            s <- MaybeT $ lift $ getReport jobId
+            url <- MaybeT $ lift getUrl
+            let js = T.concat ["<script>", updateJS url delay, "</script>"]
+            s <- MaybeT $ lift getStatus
             return $ StatusData ts s js
-
-
-------------------------------------------------------------------------------
-type JobId = Text
 
 
 ------------------------------------------------------------------------------
@@ -268,12 +238,15 @@ statusSplices = do
     "ifFinished" ## ifCSplice (isFinished . statusJobState . sdStatus)
     "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . statusJobState . sdStatus)
     "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . statusJobState . sdStatus)
+    "messages" ## manyWithSplices runChildren
+                    ("msgText" ## pureSplice (textSplice id)) .
+                    (liftM $ statusMessages . sdStatus)
     mapS pureSplice $ do
       "elapsedSeconds" ## textSplice (tshow . statusElapsed)
       "startTime" ## textSplice (tshow . statusStartTime . sdStatus)
       "endTime" ## textSplice (tshow . statusEndTime . sdStatus)
       "jobState" ## textSplice (tshow . statusJobState  . sdStatus)
-      "messages" ## textSplice (tshow . statusMessages . sdStatus)
+      --"messages" ## textSplice (tshow . statusMessages . sdStatus)
       "percentCompleted" ## textSplice (tshow . statusPercentCompleted . sdStatus)
       "amountCompleted" ## textSplice (tshow . statusAmountCompleted . sdStatus)
       "amountTotal" ## textSplice (tshow . statusAmountTotal . sdStatus)
@@ -300,14 +273,14 @@ statusElapsed StatusData{..} =
 -- | JS code to do an AJAX request to updateStatus after a delay.
 updateJS
     :: Text
-    -- ^ The job ID
+    -- ^ The url for incremental status updates
     -> Int
     -- ^ The amount of time to wait before requesting the page in milliseconds
     -> Text
-updateJS jobId delay = T.pack $ show $ renderOneLine $ renderJs $
+updateJS url delay = T.pack $ show $ renderOneLine $ renderJs $
     [jmacro|
       setTimeout(function() {
-        $.get('updateStatus', {jobId: `(T.unpack jobId)`});
+        $.get(`(T.unpack url)`);
       }, `(show delay)`);
     |]
 
