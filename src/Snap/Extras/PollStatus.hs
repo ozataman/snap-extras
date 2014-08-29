@@ -102,6 +102,7 @@ module Snap.Extras.PollStatus
 ------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder
 import qualified Blaze.ByteString.Builder.Char8 as BB
+import           Control.Applicative
 import           Control.Error
 import           Control.Monad
 import           Control.Monad.Trans
@@ -135,7 +136,7 @@ jobStatusHandler
     -> T.Text
     -- ^ A CSS selector string used to substitute the contents of the AJAX
     -- template into the status page.
-    -> Handler b b ()
+    -> Handler b v ()
 jobStatusHandler updateTemplate selector =
     replaceWithTemplate updateTemplate selector
 
@@ -205,7 +206,7 @@ isFinished _ = False
 ------------------------------------------------------------------------------
 -- | The complete status of a job.
 data Status = Status
-    { statusStartTime       :: UTCTime
+    { statusStartTime       :: Maybe UTCTime
     , statusJobState        :: JobState
     , statusEndTime         :: Maybe UTCTime
     , statusMessages        :: [Text]
@@ -264,9 +265,9 @@ statusSplices = do
 
 
 ------------------------------------------------------------------------------
-statusElapsed :: StatusData -> Int
+statusElapsed :: StatusData -> Maybe Int
 statusElapsed StatusData{..} =
-    round $ diffUTCTime sdTimestamp (statusStartTime sdStatus)
+    round . diffUTCTime sdTimestamp <$> statusStartTime sdStatus
 
 
 ------------------------------------------------------------------------------

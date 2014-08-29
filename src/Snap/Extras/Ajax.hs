@@ -60,8 +60,8 @@ replaceWith selector bs = do
 replaceWithJs :: String -> String -> JStat
 replaceWithJs bs sel = [jmacro|
     var contents = `(bs)`;
-    var replace = function() { $(`(sel)`).html(contents); };
-    replace();
+    var replaceJs = function() { $(`(sel)`).html(contents); };
+    replaceJs();
 |]
 
 
@@ -72,16 +72,16 @@ replaceWithJs bs sel = [jmacro|
 -- Currently expect you to have jQuery loaded.
 -- TODO: Make this jQuery independent
 replaceWithTemplate
-    :: HasHeist v
+    :: HasHeist b
     => ByteString
     -- ^ Heist template name
     -> Text
     -- ^ jQuery selector for target element on page
-    -> Handler v v ()
+    -> Handler b v ()
 replaceWithTemplate nm sel = do
     (bld, _) <- maybeBadReq "Could not render a response." $
       withHeistState $ \ hs -> renderTemplate hs nm
-    bld' <- bld
+    bld' <- withTop' id bld
     replaceWith sel (toByteString bld')
 
 

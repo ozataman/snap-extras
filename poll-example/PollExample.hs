@@ -48,7 +48,8 @@ newJob :: UTCTime -> JobRepo -> (JobRepo, Int)
 newJob ts repo = (JobRepo (i+1) jobs, i)
   where
     i = repoNextInd repo
-    jobs = M.insert i (Status ts Running Nothing [] 0 100) $ repoJobs repo
+    jobs = M.insert i (Status (Just ts) Running Nothing [] 0 100) $
+             repoJobs repo
 
 updateJob :: Int -> (Status -> Status) -> JobRepo -> (JobRepo, ())
 updateJob jobId f repo = (JobRepo (repoNextInd repo) newJobs, ())
@@ -70,7 +71,8 @@ jobAction ref jobId ts seconds = do
         numIters = ceiling $ seconds / inc
     forM_ [1..numIters] $ \n -> do
         threadDelay $ round $ inc * 1000000
-        let setStatus _ = Status ts Running Nothing [] (fromIntegral n * inc) seconds
+        let setStatus _ = Status (Just ts) Running Nothing []
+                                 (fromIntegral n * inc) seconds
         atomicModifyIORef' ref (updateJob jobId setStatus)
 
 
