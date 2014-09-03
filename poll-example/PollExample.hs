@@ -44,11 +44,11 @@ data JobRepo = JobRepo
 
 emptyJobRepo = JobRepo 0 M.empty
 
-newJob :: UTCTime -> JobRepo -> (JobRepo, Int)
-newJob ts repo = (JobRepo (i+1) jobs, i)
+newJob :: UTCTime -> UTCTime -> JobRepo -> (JobRepo, Int)
+newJob ts curTs repo = (JobRepo (i+1) jobs, i)
   where
     i = repoNextInd repo
-    jobs = M.insert i (Status (Just ts) Running Nothing [] 0 100) $
+    jobs = M.insert i (Status (Just ts) curTs Running [] 0 10) $
              repoJobs repo
 
 updateJob :: Int -> (Status -> Status) -> JobRepo -> (JobRepo, ())
@@ -63,16 +63,16 @@ updateJob jobId f repo = (JobRepo (repoNextInd repo) newJobs, ())
 jobAction
     :: IORef JobRepo
     -> Int
-    -> UTCTime
     -> Double
     -> IO ()
-jobAction ref jobId ts seconds = do
+jobAction ref jobId seconds = do
     let inc = seconds / 100.0
         numIters = ceiling $ seconds / inc
     forM_ [1..numIters] $ \n -> do
         threadDelay $ round $ inc * 1000000
-        let setStatus _ = Status (Just ts) Running Nothing []
-                                 (fromIntegral n * inc) seconds
+        ts <- liftIO getCurrentTime
+        let setStatus s = s { statusTimestamp = ts
+                            , statusAmountCompleted = (fromIntegral n * inc) }
         atomicModifyIORef' ref (updateJob jobId setStatus)
 
 
@@ -121,7 +121,8 @@ main = do
 -- type of job you need status for.
 splices = do
     -- You need one of these status splices per status job type
-    "jobStatus" ## statusSplice getUrl getMyJobStatus
+    "jobStatus" ## statusSplice statusSplices getUrl getMyJobStatus
+                                statusFinished
   where
     getUrl = do
         jobId <- getParam "jobId"
@@ -134,8 +135,8 @@ startlongjob :: Handler App App ()
 startlongjob = do
     ref <- gets _repo
     ts <- liftIO getCurrentTime
-    jobId <- liftIO $ atomicModifyIORef' ref (newJob ts)
-    liftIO $ forkIO $ jobAction ref jobId ts 10
+    jobId <- liftIO $ atomicModifyIORef' ref (newJob ts ts)
+    liftIO $ forkIO $ jobAction ref jobId 10
     redirect $ T.encodeUtf8 $ "jobstatus?jobId=" <> (T.pack $ show jobId)
 
 

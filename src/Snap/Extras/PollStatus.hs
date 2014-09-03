@@ -10,42 +10,18 @@
 This module provides infrastructure for polling the status of processes that
 run longer than a single request-response lifecycle.  To do this, we issue
 AJAX calls at regular intervals to a route that updates the status on the
-page.  There are two main components necessary to use this library: routes and
-splices.
+page.  There are two main components necessary to use this library: splices
+and a handler.
 
-The routes are set up by the 'jobsHandler' function.  Typically you'll add it
+The handler is a simple 'jobStatusHandler' function.  Typically you'll add it
 to your site's list of routes like this:
 
 > route [ ...
->       , ("myJob", jobsHandler myJobStarter myJobStatusPage
->                               "myJobUpdateStatusTemplate" ".statusdiv")
+>       , ("myJobStatus", jobStatusHandler "statusTemplate" ".statusDiv")
 >       , ...
 >       ]
 
-The jobsHandler function binds three routes:
-
-* myJob/start
-
-* myJob/status
-
-* myJob/updateStatus
-
-start and status are the pages you will use for starting a job and showing the
-user the job status.  The updateStatus page is used internally for the
-individual status refreshes, so you probably will never need to use it
-directly.
-
-You will also need to bind the main splice provided by this module.
-
-> splices = do
->     ...
->     "myJobStatus" ## statusSplice getMyJobStatus
-
-You need to bind this splice once for each type of action that you are
-polling, each with its own splice name and function for getting the job
-status.
-
-The third argument to jobsHandler is the template that will be rendered for
+The first argument to jobsHandler is the template that will be rendered for
 status update requests.  It will typically be not much more than a
 @\<myJobStatus\>@ tag enclosing the custom markup for displaying your job status.
 Here's an example using a bootstrap progress bar:
@@ -75,16 +51,25 @@ Here's an example using a bootstrap progress bar:
 > </myJobStatus>
 
 This will poll for updates every 300 milliseconds.  See the documentation for
-'statusSplice' for more information about the splices available to you inside
-the @\<myJobStatus\>@ tag.
+'statusSplice' for more details.
 
 To get the above code working, you would have the myJobStatusPage handler
 return markup that contains something like this:
 
 > <h1>Status</h1>
 > <div class="statusdiv col-md-4">
->   <apply template="myJobUpdateStatusTemplate"/>
+>   <apply template="statusTemplate"/>
 > </div>
+
+You will also need to bind the main splice provided by this module.
+
+> splices = do
+>     ...
+>     "myJobStatus" ## statusSplice splices getUrl getMyJobStatus isFinished
+
+You need to bind this splice once for each type of action that you are
+polling, each with its own splice name and function for getting the job
+status.
 
 -}
 
@@ -92,7 +77,7 @@ module Snap.Extras.PollStatus
   ( jobStatusHandler
   , statusSplice
   , JobState(..)
-  , isFinished
+  , statusFinished
   , Status(..)
   , statusPercentCompleted
   , statusElapsed
@@ -127,8 +112,7 @@ import           Snap.Extras.Ajax
 
 
 ------------------------------------------------------------------------------
--- | Top-level handler that sets up routes for the job polling infrastructure.
--- This handler sets up three sub-routes: start, status, and updateStatus.
+-- | Top-level handler that handles the job polling infrastructure.
 jobStatusHandler
     :: HasHeist b
     => ByteString
@@ -139,15 +123,6 @@ jobStatusHandler
     -> Handler b v ()
 jobStatusHandler updateTemplate selector =
     replaceWithTemplate updateTemplate selector
-
-
-------------------------------------------------------------------------------
--- | Internal type to make splice code clearer.
-data StatusData = StatusData
-    { sdTimestamp :: UTCTime
-    , sdStatus    :: Status
-    , sdJs        :: Text
-    }
 
 
 ------------------------------------------------------------------------------
@@ -162,31 +137,62 @@ data StatusData = StatusData
 -- elapsedSeconds, startTime, endTime, jobState, messages, percentCompleted,
 -- amountCompleted, amountTotal
 statusSplice
-    :: MonadSnap n
-    => n (Maybe Text)
+    :: Monad n
+    => Splices (RuntimeSplice n status -> Splice n)
+    -- ^ Splices defined for your job status type status.
+    -> n (Maybe Text)
     -- ^ Handler to get the URL that should be used for requesting AJAX status
     -- updates.  This must be a handler because it will usually contain some
     -- form of job ID that is only obtainable at runtime.
-    -> n (Maybe Status)
+    -> n (Maybe status)
     -- ^ Handler that knows how to get the status of the job in question.
     -- This typically will require it to know how to get some sort of job ID
     -- from the request.
+    -> (status -> Bool)
+    -- ^ A function to tell whether the status is finished
     -> Splice n
-statusSplice getUrl getStatus = do
+statusSplice splices getUrl getStatus isFinished = do
     n <- getParamNode
     runAttrs <- runAttributesRaw $ X.elementAttrs n
-
     let nodes = X.elementChildren n ++ [X.Element "updateJs" [] []]
         run = runNodeList nodes
-    mayDeferMap return (withSplices run statusSplices) $ do
+    mayDeferMap return (withSplices run allSplices) $ do
         attrs <- runAttrs
-        ts <- liftIO getCurrentTime
         let delay = fromMaybe 1000 $ fromText =<< lookup "interval" attrs
         runMaybeT $ do
             url <- MaybeT $ lift getUrl
             let js = T.concat ["<script>", updateJS url delay, "</script>"]
             s <- MaybeT $ lift getStatus
-            return $ StatusData ts s js
+            return (js, s)
+  where
+    allSplices = do
+        "updateJs" ## pureSplice internalUpdate
+        mapS (. liftM snd) splices
+    internalUpdate (js,s) =
+        if not $ isFinished s
+          then BB.fromText js
+          else mempty
+
+
+------------------------------------------------------------------------------
+-- | JS code to do an AJAX request to updateStatus after a delay.
+updateJS
+    :: Text
+    -- ^ The url for incremental status updates
+    -> Int
+    -- ^ The amount of time to wait before requesting the page in milliseconds
+    -> Text
+updateJS url delay = T.pack $ show $ renderOneLine $ renderJs $
+    [jmacro|
+      setTimeout(function() {
+        $.get(`(T.unpack url)`);
+      }, `(show delay)`);
+    |]
+
+
+------------------------------------------------------------------------------
+--                          Example Implementation
+------------------------------------------------------------------------------
 
 
 ------------------------------------------------------------------------------
@@ -197,18 +203,24 @@ data JobState = Pending | Running | FinishedSuccess | FinishedFailure
 
 ------------------------------------------------------------------------------
 -- | Returns a bool indicating whether the job is finished.
-isFinished :: JobState -> Bool
-isFinished FinishedSuccess = True
-isFinished FinishedFailure = True
-isFinished _ = False
+jobFinished :: JobState -> Bool
+jobFinished FinishedSuccess = True
+jobFinished FinishedFailure = True
+jobFinished _ = False
+
+
+------------------------------------------------------------------------------
+-- | Returns a bool indicating whether the job is finished.
+statusFinished :: Status -> Bool
+statusFinished = jobFinished . statusJobState
 
 
 ------------------------------------------------------------------------------
 -- | The complete status of a job.
 data Status = Status
     { statusStartTime       :: Maybe UTCTime
+    , statusTimestamp       :: UTCTime
     , statusJobState        :: JobState
-    , statusEndTime         :: Maybe UTCTime
     , statusMessages        :: [Text]
     , statusAmountCompleted :: Double
     , statusAmountTotal     :: Double
@@ -231,57 +243,29 @@ tshow = T.pack . show
 -- | The status splices
 statusSplices
     :: Monad n
-    => Splices (RuntimeSplice n StatusData -> Splice n)
+    => Splices (RuntimeSplice n Status -> Splice n)
 statusSplices = do
-    "ifPending" ## ifCSplice ((==Pending) . statusJobState . sdStatus)
-    "ifRunning" ## ifCSplice ((==Running) . statusJobState . sdStatus)
-    "ifNotFinished" ## ifCSplice (not . isFinished . statusJobState . sdStatus)
-    "ifFinished" ## ifCSplice (isFinished . statusJobState . sdStatus)
-    "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . statusJobState . sdStatus)
-    "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . statusJobState . sdStatus)
+    "ifPending" ## ifCSplice ((==Pending) . statusJobState)
+    "ifRunning" ## ifCSplice ((==Running) . statusJobState)
+    "ifNotFinished" ## ifCSplice (not . statusFinished)
+    "ifFinished" ## ifCSplice (statusFinished)
+    "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . statusJobState)
+    "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . statusJobState)
     "messages" ## manyWithSplices runChildren
                     ("msgText" ## pureSplice (textSplice id)) .
-                    (liftM $ statusMessages . sdStatus)
+                    (liftM $ statusMessages)
     mapS pureSplice $ do
-      "elapsedSeconds" ## textSplice (tshow . statusElapsed)
-      "startTime" ## textSplice (tshow . statusStartTime . sdStatus)
-      "endTime" ## textSplice (tshow . statusEndTime . sdStatus)
-      "jobState" ## textSplice (tshow . statusJobState  . sdStatus)
-      --"messages" ## textSplice (tshow . statusMessages . sdStatus)
-      "percentCompleted" ## textSplice (tshow . statusPercentCompleted . sdStatus)
-      "amountCompleted" ## textSplice (tshow . statusAmountCompleted . sdStatus)
-      "amountTotal" ## textSplice (tshow . statusAmountTotal . sdStatus)
-
-      -- I didn't mention this splice in the docs because I always add it onto
-      -- the end of the status splice children, so the end user should never
-      -- need it.
-      "updateJs" ## internalUpdate
-  where
-    internalUpdate :: StatusData -> Builder
-    internalUpdate StatusData{..} =
-        if not $ isFinished $ statusJobState sdStatus
-          then BB.fromText sdJs
-          else mempty
+      "startTime" ## textSplice (tshow . statusStartTime)
+      "endTime" ## textSplice (tshow . statusTimestamp)
+      "jobState" ## textSplice (tshow . statusJobState )
+      "percentCompleted" ## textSplice (tshow . statusPercentCompleted)
+      "amountCompleted" ## textSplice (tshow . statusAmountCompleted)
+      "amountTotal" ## textSplice (tshow . statusAmountTotal)
 
 
 ------------------------------------------------------------------------------
-statusElapsed :: StatusData -> Maybe Int
-statusElapsed StatusData{..} =
-    round . diffUTCTime sdTimestamp <$> statusStartTime sdStatus
+statusElapsed :: Status -> Maybe Int
+statusElapsed Status{..} =
+    round . diffUTCTime statusTimestamp <$> statusStartTime
 
-
-------------------------------------------------------------------------------
--- | JS code to do an AJAX request to updateStatus after a delay.
-updateJS
-    :: Text
-    -- ^ The url for incremental status updates
-    -> Int
-    -- ^ The amount of time to wait before requesting the page in milliseconds
-    -> Text
-updateJS url delay = T.pack $ show $ renderOneLine $ renderJs $
-    [jmacro|
-      setTimeout(function() {
-        $.get(`(T.unpack url)`);
-      }, `(show delay)`);
-    |]
 
