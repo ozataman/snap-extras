@@ -76,7 +76,11 @@ status.
 module Snap.Extras.PollStatus
   ( jobStatusHandler
   , statusSplice
+
+  -- * Generic Status Type
+
   , JobState(..)
+  , jobFinished
   , statusFinished
   , Status(..)
   , statusPercentCompleted
@@ -194,6 +198,9 @@ updateJS url delay = T.pack $ show $ renderOneLine $ renderJs $
 --                          Example Implementation
 ------------------------------------------------------------------------------
 
+
+-- The above functions are everything you need to use the polling
+-- infrastructure using yo
 
 ------------------------------------------------------------------------------
 -- | Enumeration of the states a job can be in.
