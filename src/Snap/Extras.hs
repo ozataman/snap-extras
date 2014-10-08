@@ -7,6 +7,7 @@ module Snap.Extras
     , module Snap.Extras.FlashNotice
     , module Snap.Extras.FormUtils
     , module Snap.Extras.JSON
+    , module Snap.Extras.MethodOverride
     , module Snap.Extras.Tabs
     , module Snap.Extras.TextUtils
     , initExtras
@@ -26,6 +27,7 @@ import           Snap.Extras.CSRF
 import           Snap.Extras.FlashNotice
 import           Snap.Extras.FormUtils
 import           Snap.Extras.JSON
+import           Snap.Extras.MethodOverride
 import qualified Snap.Extras.SpliceUtils.Compiled    as C
 import qualified Snap.Extras.SpliceUtils.Interpreted as I
 import           Snap.Extras.Tabs
