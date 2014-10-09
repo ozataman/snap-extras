@@ -23,6 +23,7 @@ module Snap.Extras.Tabs
 -------------------------------------------------------------------------------
 import qualified Blaze.ByteString.Builder as B
 import           Control.Error
+import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
 
@@ -48,8 +49,8 @@ initTabs :: HasHeist b => Snaplet (Heist b) -> Initializer b v ()
 initTabs h = do
     let splices = ("tabs" ## tabsSplice)
         csplices = ("tabs" ## tabsCSplice)
-    addConfig h $ mempty { hcCompiledSplices = csplices
-                         , hcInterpretedSplices = splices }
+    addConfig h $ mempty & scCompiledSplices .~ csplices
+                         & scInterpretedSplices .~ splices
 
 
                               -------------------

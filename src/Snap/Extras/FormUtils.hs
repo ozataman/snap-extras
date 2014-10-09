@@ -27,12 +27,12 @@ import           Control.Error
 import qualified Data.ByteString.Char8 as B
 import           Data.String
 import           Data.Text             (Text)
-import           Data.Text.Encoding
 import qualified Data.Text             as T
-import           Heist
+import           Data.Text.Encoding
+import           Heist                 hiding (Error)
 import           Snap.Core
 import           Text.Digestive
-import qualified Text.XmlHtml           as X
+import qualified Text.XmlHtml          as X
 -------------------------------------------------------------------------------
 
 
