@@ -66,7 +66,7 @@ tabsCSplice = do
     let getCtx = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
         splices = ("tab" ## tabCSplice getCtx)
     case n of
-      Element _ attrs ch -> C.withLocalSplices splices noSplices $
+      Element _ attrs ch -> C.withLocalSplices splices mempty $
           C.runNode $ X.Element "ul" attrs ch
       _ -> error "tabs tag has to be an Element"
 

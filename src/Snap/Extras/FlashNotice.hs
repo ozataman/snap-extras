@@ -102,7 +102,7 @@ flashCSplice session = do
           "message" ## return $ C.yieldRuntimeText
                               $ liftM (fromMaybe "Flash notice cookie error")
                                 getVal
-    flashTemplate <- C.withLocalSplices ss noSplices (C.callTemplate "_flash")
+    flashTemplate <- C.withLocalSplices ss mempty (C.callTemplate "_flash")
     return $ C.yieldRuntime $ do
         msg <- getVal
         case msg of

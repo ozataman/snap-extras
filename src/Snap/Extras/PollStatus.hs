@@ -268,7 +268,7 @@ statusSplices = do
     "ifFinished" ## ifCSplice (isFinished . statusJobState . sdStatus)
     "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . statusJobState . sdStatus)
     "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . statusJobState . sdStatus)
-    mapS pureSplice $ do
+    mapV pureSplice $ do
       "elapsedSeconds" ## textSplice (tshow . statusElapsed)
       "startTime" ## textSplice (tshow . statusStartTime . sdStatus)
       "endTime" ## textSplice (tshow . statusEndTime . sdStatus)

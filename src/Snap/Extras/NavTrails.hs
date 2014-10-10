@@ -21,10 +21,6 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 
 
-import           Heist.Internal.Types
-
-
-
 -------------------------------------------------------------------------------
 data NavTrail b = NavTrail {
       ntSes :: SnapletLens b SessionManager

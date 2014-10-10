@@ -28,7 +28,7 @@ import           Blaze.ByteString.Builder
 import           Control.Applicative
 import           Data.ByteString.Char8      (ByteString)
 import qualified Data.ByteString.Char8      as B
-import           Data.Text
+import           Data.Text (Text)
 import qualified Data.Text                  as T
 import           Heist.Compiled
 import           Language.Javascript.JMacro
