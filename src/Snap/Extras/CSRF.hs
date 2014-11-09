@@ -115,6 +115,6 @@ handleCSRF'
     -> Handler b v ()
     -- ^ On failure
     -> Handler b v ()
-handleCSRF' ses fail = handleCSRF ses fail (return ())
+handleCSRF' ses onFail = handleCSRF ses onFail (return ())
 
 

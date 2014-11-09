@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module Snap.Extras.FlashNotice
     ( initFlashNotice
@@ -12,18 +12,19 @@ module Snap.Extras.FlashNotice
     ) where
 
 -------------------------------------------------------------------------------
+import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.Maybe
 import           Data.Monoid
-import           Data.Text             (Text)
-import qualified Data.Text             as T
+import           Data.Text            (Text)
+import qualified Data.Text            as T
+import           Heist
+import qualified Heist.Compiled       as C
+import           Heist.Interpreted
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
-import           Heist
-import           Heist.Interpreted
-import qualified Heist.Compiled        as C
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
 
@@ -32,14 +33,14 @@ import           Text.XmlHtml
 -- | Initialize the flash notice system. All you have to do now is to
 -- add some flash tags in your application template. See 'flashSplice'
 -- for examples.
-initFlashNotice 
-    :: HasHeist b 
+initFlashNotice
+    :: HasHeist b
     => Snaplet (Heist b) -> SnapletLens b SessionManager -> Initializer b v ()
 initFlashNotice h session = do
     let splices = ("flash" ## flashSplice session)
         csplices = ("flash" ## flashCSplice session)
-    addConfig h $ mempty { hcCompiledSplices = csplices
-                         , hcInterpretedSplices = splices }
+    addConfig h $ mempty & scCompiledSplices .~ csplices
+                         & scInterpretedSplices .~ splices
 
 -------------------------------------------------------------------------------
 -- | Display an info message on next load of a page
@@ -76,7 +77,7 @@ flashSplice session = do
     let typ' = maybe "warning" id typ
     let k = T.concat ["_", typ']
     msg <- lift $ withTop session $ getFromSession k
-    case msg of 
+    case msg of
       Nothing -> return []
       Just msg' -> do
         lift $ withTop session $ deleteFromSession k >> commitSession
@@ -101,7 +102,7 @@ flashCSplice session = do
           "message" ## return $ C.yieldRuntimeText
                               $ liftM (fromMaybe "Flash notice cookie error")
                                 getVal
-    flashTemplate <- C.withLocalSplices ss noSplices (C.callTemplate "_flash")
+    flashTemplate <- C.withLocalSplices ss mempty (C.callTemplate "_flash")
     return $ C.yieldRuntime $ do
         msg <- getVal
         case msg of
@@ -112,5 +113,3 @@ flashCSplice session = do
               deleteFromSession k
               commitSession
             return res
-
-

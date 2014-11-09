@@ -23,6 +23,7 @@ module Snap.Extras.Tabs
 -------------------------------------------------------------------------------
 import qualified Blaze.ByteString.Builder as B
 import           Control.Error
+import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
 
@@ -48,8 +49,8 @@ initTabs :: HasHeist b => Snaplet (Heist b) -> Initializer b v ()
 initTabs h = do
     let splices = ("tabs" ## tabsSplice)
         csplices = ("tabs" ## tabsCSplice)
-    addConfig h $ mempty { hcCompiledSplices = csplices
-                         , hcInterpretedSplices = splices }
+    addConfig h $ mempty & scCompiledSplices .~ csplices
+                         & scInterpretedSplices .~ splices
 
 
                               -------------------
@@ -65,7 +66,7 @@ tabsCSplice = do
     let getCtx = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
         splices = ("tab" ## tabCSplice getCtx)
     case n of
-      Element _ attrs ch -> C.withLocalSplices splices noSplices $
+      Element _ attrs ch -> C.withLocalSplices splices mempty $
           C.runNode $ X.Element "ul" attrs ch
       _ -> error "tabs tag has to be an Element"
 

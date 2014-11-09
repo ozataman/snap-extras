@@ -7,12 +7,14 @@ module Snap.Extras
     , module Snap.Extras.FlashNotice
     , module Snap.Extras.FormUtils
     , module Snap.Extras.JSON
+    , module Snap.Extras.MethodOverride
     , module Snap.Extras.Tabs
     , module Snap.Extras.TextUtils
     , initExtras
     ) where
 
 -------------------------------------------------------------------------------
+import           Control.Lens
 import           Data.Monoid
 import           Heist
 import           Snap.Snaplet
@@ -26,6 +28,7 @@ import           Snap.Extras.CSRF
 import           Snap.Extras.FlashNotice
 import           Snap.Extras.FormUtils
 import           Snap.Extras.JSON
+import           Snap.Extras.MethodOverride
 import qualified Snap.Extras.SpliceUtils.Compiled    as C
 import qualified Snap.Extras.SpliceUtils.Interpreted as I
 import           Snap.Extras.Tabs
@@ -50,8 +53,6 @@ initExtras heistSnaplet session =
       addTemplatesAt heistSnaplet "" . (</> "resources/templates")
         =<< getSnapletFilePath
       initFlashNotice heistSnaplet session
-      addConfig heistSnaplet $ mempty
-        { hcInterpretedSplices = I.utilSplices
-        , hcCompiledSplices = C.utilSplices
-        }
+      addConfig heistSnaplet $ mempty & scInterpretedSplices .~ I.utilSplices
+                                      & scCompiledSplices .~ C.utilSplices
       initTabs heistSnaplet

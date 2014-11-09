@@ -98,7 +98,7 @@ fancyLoopSplice splices action = do
     p <- newEmptyPromise
 
     let splices' = do
-          mapS ($ getPromise p) splices
+          mapV ($ getPromise p) splices
           "prelude" ## return mempty
           "interlude" ## return mempty
           "postlude" ## return mempty
@@ -107,7 +107,7 @@ fancyLoopSplice splices action = do
     interChunks <- findNamedChild n "interlude"
     postChunks <- findNamedChild n "postlude"
 
-    itemChunks <- withLocalSplices splices' noSplices runChildren
+    itemChunks <- withLocalSplices splices' mempty runChildren
     return $ yieldRuntime $ do
         items <- action
         case items of

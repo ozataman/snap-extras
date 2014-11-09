@@ -5,20 +5,20 @@
 module Snap.Extras.NavTrails where
 
 import           Blaze.ByteString.Builder.ByteString
+import           Control.Lens                        hiding (lens)
 import           Control.Monad.State.Strict
-import           Data.ByteString            (ByteString)
+import           Data.ByteString                     (ByteString)
 import           Data.Maybe
 import           Data.Monoid
-import           Data.Text                  (Text)
-import qualified Data.Text.Encoding         as T
+import           Data.Text                           (Text)
+import qualified Data.Text.Encoding                  as T
+import           Heist
+import qualified Heist.Compiled                      as C
+import           Heist.Interpreted
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
-import           Heist
-import qualified Heist.Compiled as C
-import           Heist.Interpreted
-
 
 
 -------------------------------------------------------------------------------
@@ -127,13 +127,12 @@ focusCSplice lens = return $ C.yieldRuntimeText $ do
 addNavTrailSplices :: Snaplet (Heist b) -> Initializer b (NavTrail b) ()
 addNavTrailSplices heist = do
   lens <- getLens
-  addConfig heist $
-    mempty { hcCompiledSplices = do
-               "linkToFocus" ## focusCSplice lens
-               "linkToBack" ## backCSplice
-           , hcInterpretedSplices = do
-               "linkToFocus" ## focusSplice lens
-               "linkToBack" ## backSplice
-           }
-
-
+  addConfig heist $ mempty & scCompiledSplices .~ compiledSplices lens
+                           & scInterpretedSplices .~ interpretedSplices lens
+  where
+    compiledSplices lens = do
+      "linkToFocus" ## focusCSplice lens
+      "linkToBack" ## backCSplice
+    interpretedSplices lens = do
+      "linkToFocus" ## focusSplice lens
+      "linkToBack" ## backSplice

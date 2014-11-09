@@ -171,7 +171,7 @@ statusSplice splices getUrl getStatus isFinished = do
   where
     allSplices = do
         "updateJs" ## pureSplice internalUpdate
-        mapS (. liftM snd) splices
+        mapV (. liftM snd) splices
     internalUpdate (js,s) =
         if not $ isFinished s
           then BB.fromText js
@@ -261,7 +261,7 @@ statusSplices = do
     "messages" ## manyWithSplices runChildren
                     ("msgText" ## pureSplice (textSplice id)) .
                     (liftM $ statusMessages)
-    mapS pureSplice $ do
+    mapV pureSplice $ do
       "startTime" ## textSplice (tshow . statusStartTime)
       "endTime" ## textSplice (tshow . statusTimestamp)
       "jobState" ## textSplice (tshow . statusJobState )
