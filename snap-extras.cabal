@@ -47,6 +47,7 @@ Library
   hs-source-dirs: src
   Build-depends:
       aeson                    >= 0.6   && < 0.8
+    , msgpack                  >= 0.7.2 && < 0.7.3
     , base                     >= 4     && < 5
     , blaze-builder            >= 0.3   && < 0.4
     , blaze-html               >= 0.6   && < 0.8
