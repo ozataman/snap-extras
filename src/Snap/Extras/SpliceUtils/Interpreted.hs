@@ -13,17 +13,18 @@ module Snap.Extras.SpliceUtils.Interpreted
 
 -------------------------------------------------------------------------------
 import           Control.Monad
+import           Control.Monad.Trans
 import           Control.Monad.Trans.Class
-import qualified Data.Configurator         as C
-import           Data.Text                 (Text)
-import qualified Data.Text                 as T
-import qualified Data.Text.Encoding        as T
+import qualified Data.Configurator              as C
+import           Data.Text                      (Text)
+import qualified Data.Text                      as T
+import qualified Data.Text.Encoding             as T
+import           Heist
+import           Heist.Interpreted
+import           Heist.Splices
 import           Snap
 import           Snap.Extras.SpliceUtils.Common
 import           Snap.Snaplet.Heist.Interpreted
-import           Heist
-import           Heist.Splices
-import           Heist.Interpreted
 import           Text.XmlHtml
 -------------------------------------------------------------------------------
 

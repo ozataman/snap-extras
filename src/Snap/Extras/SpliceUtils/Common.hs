@@ -1,10 +1,13 @@
 module Snap.Extras.SpliceUtils.Common where
 
-import qualified Data.Foldable             as F
+-------------------------------------------------------------------------------
+import           Control.Monad.Trans
+import qualified Data.Foldable         as F
 import           Data.List
 import           Snap
 import           System.Directory.Tree
 import           System.FilePath
+-------------------------------------------------------------------------------
 
 getScripts :: MonadIO m => FilePath -> m [String]
 getScripts d = do

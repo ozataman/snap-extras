@@ -3,6 +3,7 @@
 module Snap.Extras.CSRF where
 
 ------------------------------------------------------------------------------
+import           Control.Monad.Trans
 import qualified Data.ByteString.Char8 as B
 import           Data.Text             (Text)
 import qualified Data.Text.Encoding    as T
