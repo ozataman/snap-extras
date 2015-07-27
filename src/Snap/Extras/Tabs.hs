@@ -22,11 +22,10 @@ module Snap.Extras.Tabs
 
 -------------------------------------------------------------------------------
 import qualified Blaze.ByteString.Builder as B
-import           Control.Error
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
-
+import           Data.Maybe
 import           Data.Monoid
 import           Data.Text                (Text)
 import qualified Data.Text                as T
@@ -234,3 +233,8 @@ tab url text attr md context = X.Element "li" attr' [tlink url text]
 -------------------------------------------------------------------------------
 tlink :: Text -> Text -> Node
 tlink target text = X.Element "a" [("href", target)] [X.TextNode text]
+
+-------------------------------------------------------------------------------
+
+note :: a -> Maybe b -> Either a b
+note a = maybe (Left a) Right
