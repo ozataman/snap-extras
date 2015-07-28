@@ -23,13 +23,15 @@ module Snap.Extras.FormUtils
     ) where
 
 -------------------------------------------------------------------------------
-import           Control.Error
+import           Control.Monad.Trans.Maybe
 import qualified Data.ByteString.Char8 as B
+import           Data.Maybe
 import           Data.String
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import           Data.Text.Encoding
 import           Heist                 hiding (Error)
+import           Safe
 import           Snap.Core
 import           Text.Digestive
 import qualified Text.XmlHtml          as X

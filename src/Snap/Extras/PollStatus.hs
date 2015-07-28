@@ -92,10 +92,11 @@ module Snap.Extras.PollStatus
 import           Blaze.ByteString.Builder
 import qualified Blaze.ByteString.Builder.Char8 as BB
 import           Control.Applicative
-import           Control.Error
 import           Control.Monad
 import           Control.Monad.Trans
+import           Control.Monad.Trans.Maybe
 import           Data.ByteString                (ByteString)
+import           Data.Maybe
 import           Data.Monoid
 import           Data.Readable
 import           Data.Text
