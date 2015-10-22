@@ -122,3 +122,8 @@ Test-Suite test
    , tasty-hunit
    , tasty-quickcheck
    , QuickCheck
+
+source-repository head
+  type:     git
+  location: https://github.com/ozataman/snap-extras.git
+
