@@ -11,7 +11,11 @@ module Snap.Extras.JSON
     , getJSONField
     , reqJSONField
     -- * Sending JSON Data
+    , JSONWrap(..)
     , writeJSON
+    , writeJSONWrapped
+    , writeJSONUnprotected
+    , writeJSONP
     ) where
     
 
@@ -105,9 +109,77 @@ reqJSONField fld = do
 
 
 -------------------------------------------------------------------------------
+-- | Various ways of protecting JSON data to avoid CSRF attacks.
+--
+-- See
+-- <http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx>
+-- for a description of the attack.  The default prefix is 'AngularJs'
+-- which is a prefix that is automatically stripped off by the
+-- AngularJs framework.
+--
+-- jQuery supports the following construct that will strip off this prefix:
+-- @
+--   $(function() {
+--        var PROTECTION_PREFIX = /^\)\]\}',?\n/;
+--        $.ajaxSetup({
+--            dataFilter: function(data, type){
+--                return (type == 'json') ? data.replace(PROTECTION_PREFIX, '') : data;
+--            }
+--       });
+--       ...    
+-- @
+data JSONWrap = Unprotected          -- ^ No protection, vulnerable to CSRF
+              | AngularJs            -- ^ Prefix with ")]}',\n"
+              | Comment              -- ^ Prefix with "// "
+              | Wrap B.ByteString -- ^ Prefix with the given string
+
+-------------------------------------------------------------------------------
+-- | Set MIME to 'application/json' and write given object into
+-- 'Response' body, prefixed by ")]}',\n" for anti-CSRF.
+writeJSON :: (MonadSnap m, ToJSON a) => a -> m ()
+writeJSON a = writeJSONWrapped AngularJs a
+
+-------------------------------------------------------------------------------
 -- | Set MIME to 'application/json' and write given object into
 -- 'Response' body.
-writeJSON :: (MonadSnap m, ToJSON a) => a -> m ()
-writeJSON a = do
+-- See <http://docs.angularjs.org/api/ng.$http>
+-- and <http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx>
+writeJSONUnprotected :: (MonadSnap m, ToJSON a) => a -> m ()
+writeJSONUnprotected a = writeJSONWrapped Unprotected a
+
+-------------------------------------------------------------------------------
+-- | Set MIME to 'application/json' and write given object into
+-- 'Response' body with a given escape sequence.
+writeJSONWrapped
+    :: (MonadSnap m, ToJSON a)
+    => JSONWrap
+    -- ^ The prefix to write before the JSON data
+    -> a
+    -- ^ The JSON object
+    -> m ()
+writeJSONWrapped wrap a = do
   jsonResponse
+  case wrap of
+    Unprotected -> return ()
+    AngularJs   -> writeBS ")]}',\n"
+    Comment     -> writeBS "// "
+    Wrap w      -> writeBS w
   writeLBS . encode $ a
+
+-------------------------------------------------------------------------------
+-- | Set MIME to 'application/javascript' (not json!) and write given
+-- object into 'Response' body.
+writeJSONP
+    :: (MonadSnap m, ToJSON a)
+    => B.ByteString
+    -- ^ The callback to call on the client side
+    -> a
+    -- ^ The JSON object
+    -> m ()
+writeJSONP callback a = do
+  jsResponse  -- NOTE: This is application/javascript, not json
+  writeBS callback
+  writeBS "("
+  writeLBS . encode $ a
+  writeBS ");"
+
