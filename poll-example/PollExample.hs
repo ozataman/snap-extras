@@ -15,6 +15,7 @@ import           Control.Monad.Trans
 import           Data.Aeson
 import           Data.IORef
 import qualified Data.Map                    as M
+import qualified Data.Map.Syntax             as MS
 import           Data.Monoid
 import           Data.Readable
 import qualified Data.Text                   as T
@@ -121,8 +122,8 @@ main = do
 -- type of job you need status for.
 splices = do
     -- You need one of these status splices per status job type
-    "jobStatus" ## statusSplice statusSplices getUrl getMyJobStatus
-                                statusFinished
+    "jobStatus" MS.## statusSplice statusSplices getUrl getMyJobStatus
+                                   statusFinished
   where
     getUrl = do
         jobId <- getParam "jobId"

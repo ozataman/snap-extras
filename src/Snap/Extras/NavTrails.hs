@@ -8,6 +8,7 @@ import           Blaze.ByteString.Builder.ByteString
 import           Control.Lens                        hiding (lens)
 import           Control.Monad.State.Strict
 import           Data.ByteString                     (ByteString)
+import qualified Data.Map.Syntax                     as MS
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text                           (Text)
@@ -131,8 +132,8 @@ addNavTrailSplices heist = do
                            & scInterpretedSplices .~ interpretedSplices lens
   where
     compiledSplices lens = do
-      "linkToFocus" ## focusCSplice lens
-      "linkToBack" ## backCSplice
+      "linkToFocus" MS.## focusCSplice lens
+      "linkToBack" MS.## backCSplice
     interpretedSplices lens = do
-      "linkToFocus" ## focusSplice lens
-      "linkToBack" ## backSplice
+      "linkToFocus" MS.## focusSplice lens
+      "linkToBack" MS.## backSplice

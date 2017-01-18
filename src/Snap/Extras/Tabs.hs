@@ -25,8 +25,8 @@ import qualified Blaze.ByteString.Builder as B
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
+import qualified Data.Map.Syntax          as MS
 import           Data.Maybe
-import           Data.Monoid
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
@@ -46,8 +46,8 @@ import qualified Text.XmlHtml             as X
 -------------------------------------------------------------------------------
 initTabs :: HasHeist b => Snaplet (Heist b) -> Initializer b v ()
 initTabs h = do
-    let splices = ("tabs" ## tabsSplice)
-        csplices = ("tabs" ## tabsCSplice)
+    let splices = ("tabs" MS.## tabsSplice)
+        csplices = ("tabs" MS.## tabsCSplice)
     addConfig h $ mempty & scCompiledSplices .~ csplices
                          & scInterpretedSplices .~ splices
 
@@ -63,7 +63,7 @@ tabsCSplice :: MonadSnap m => C.Splice m
 tabsCSplice = do
     n <- getParamNode
     let getCtx = lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-        splices = ("tab" ## tabCSplice getCtx)
+        splices = ("tab" MS.## tabCSplice getCtx)
     case n of
       Element _ attrs ch -> C.withLocalSplices splices mempty $
           C.runNode $ X.Element "ul" attrs ch
@@ -138,7 +138,7 @@ tabSpliceWorker _ _ = []
 tabsSplice :: MonadSnap m => Splice m
 tabsSplice = do
   context <- lift $ (T.decodeUtf8 . rqURI) `liftM` getRequest
-  let bind = bindSplices ("tab" ## tabSplice context)
+  let bind = bindSplices ("tab" MS.## tabSplice context)
   n <- getParamNode
   case n of
     Element _ attrs ch -> localHS bind $ runNodeList [X.Element "ul" attrs ch]
@@ -218,15 +218,15 @@ tab
 tab url text attr md context = X.Element "li" attr' [tlink url text]
   where
     cur = case md of
-            TAMExactMatch -> url == context
+            TAMExactMatch  -> url == context
             TAMPrefixMatch -> url `T.isPrefixOf` context
-            TAMInfixMatch -> url `T.isInfixOf` context
-            TAMDontMatch -> False
+            TAMInfixMatch  -> url `T.isInfixOf` context
+            TAMDontMatch   -> False
     attr' = if cur
             then ("class", klass) : attr
             else attr
     klass = case lookup "class" attr of
-              Just k -> T.concat [k, " ", "active"]
+              Just k  -> T.concat [k, " ", "active"]
               Nothing -> "active"
 
 

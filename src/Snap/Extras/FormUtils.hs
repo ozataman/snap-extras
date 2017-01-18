@@ -24,17 +24,17 @@ module Snap.Extras.FormUtils
 
 -------------------------------------------------------------------------------
 import           Control.Monad.Trans.Maybe
-import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Char8     as B
 import           Data.Maybe
 import           Data.String
-import           Data.Text             (Text)
-import qualified Data.Text             as T
+import           Data.Text                 (Text)
+import qualified Data.Text                 as T
 import           Data.Text.Encoding
-import           Heist                 hiding (Error)
+import           Heist
 import           Safe
 import           Snap.Core
-import           Text.Digestive
-import qualified Text.XmlHtml          as X
+import           Text.Digestive            as DF
+import qualified Text.XmlHtml              as X
 -------------------------------------------------------------------------------
 
 
@@ -50,7 +50,7 @@ maybeTrans
     => a -> Result v (Maybe a)
 maybeTrans x = f x
     where f "" = Success Nothing
-          f a = Success $ Just a
+          f a  = Success $ Just a
 
 
 -------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ readMayTrans x = Success $ readMay (T.unpack x)
 readTrans
     :: (Read a, IsString v)
     => Text -> Result v a
-readTrans a = maybe (Error "Unrecognized input") Success $ readMay . T.unpack $ a
+readTrans a = maybe (DF.Error "Unrecognized input") Success $ readMay . T.unpack $ a
 
 
 

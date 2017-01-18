@@ -25,10 +25,10 @@ module Snap.Extras.Ajax
 
 -------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder
-import           Control.Applicative
+import           Control.Applicative        as A
 import           Data.ByteString.Char8      (ByteString)
 import qualified Data.ByteString.Char8      as B
-import           Data.Text (Text)
+import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           Heist.Compiled
 import           Language.Javascript.JMacro
@@ -100,7 +100,7 @@ data ResponseType = Html | Ajax
 respond :: MonadSnap m => (ResponseType -> m b) -> m b
 respond f = do
     hs <- maybeBadReq "Accept header required for this handler" $
-          getHeader "accept" <$> getRequest
+          getHeader "accept" A.<$> getRequest
     if B.isInfixOf "application/javascript" hs
       then f Ajax
       else f Html

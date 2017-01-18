@@ -65,7 +65,7 @@ You will also need to bind the main splice provided by this module.
 
 > splices = do
 >     ...
->     "myJobStatus" ## statusSplice splices getUrl getMyJobStatus isFinished
+>     "myJobStatus" MS.## statusSplice splices getUrl getMyJobStatus isFinished
 
 You need to bind this splice once for each type of action that you are
 polling, each with its own splice name and function for getting the job
@@ -96,6 +96,7 @@ import           Control.Monad
 import           Control.Monad.Trans
 import           Control.Monad.Trans.Maybe
 import           Data.ByteString                (ByteString)
+import qualified Data.Map.Syntax                as MS
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Readable
@@ -171,8 +172,8 @@ statusSplice splices getUrl getStatus isFinished = do
             return (js, s)
   where
     allSplices = do
-        "updateJs" ## pureSplice internalUpdate
-        mapV (. liftM snd) splices
+        "updateJs" MS.## pureSplice internalUpdate
+        MS.mapV (. liftM snd) splices
     internalUpdate (js,s) =
         if not $ isFinished s
           then BB.fromText js
@@ -214,7 +215,7 @@ data JobState = Pending | Running | FinishedSuccess | FinishedFailure
 jobFinished :: JobState -> Bool
 jobFinished FinishedSuccess = True
 jobFinished FinishedFailure = True
-jobFinished _ = False
+jobFinished _               = False
 
 
 ------------------------------------------------------------------------------
@@ -253,22 +254,22 @@ statusSplices
     :: Monad n
     => Splices (RuntimeSplice n Status -> Splice n)
 statusSplices = do
-    "ifPending" ## ifCSplice ((==Pending) . statusJobState)
-    "ifRunning" ## ifCSplice ((==Running) . statusJobState)
-    "ifNotFinished" ## ifCSplice (not . statusFinished)
-    "ifFinished" ## ifCSplice (statusFinished)
-    "ifFinishedSuccess" ## ifCSplice ((==FinishedSuccess) . statusJobState)
-    "ifFinishedFailure" ## ifCSplice ((==FinishedFailure) . statusJobState)
-    "messages" ## manyWithSplices runChildren
-                    ("msgText" ## pureSplice (textSplice id)) .
+    "ifPending" MS.## ifCSplice ((==Pending) . statusJobState)
+    "ifRunning" MS.## ifCSplice ((==Running) . statusJobState)
+    "ifNotFinished" MS.## ifCSplice (not . statusFinished)
+    "ifFinished" MS.## ifCSplice (statusFinished)
+    "ifFinishedSuccess" MS.## ifCSplice ((==FinishedSuccess) . statusJobState)
+    "ifFinishedFailure" MS.## ifCSplice ((==FinishedFailure) . statusJobState)
+    "messages" MS.## manyWithSplices runChildren
+                    ("msgText" MS.## pureSplice (textSplice id)) .
                     (liftM $ statusMessages)
-    mapV pureSplice $ do
-      "startTime" ## textSplice (tshow . statusStartTime)
-      "endTime" ## textSplice (tshow . statusTimestamp)
-      "jobState" ## textSplice (tshow . statusJobState )
-      "percentCompleted" ## textSplice (tshow . statusPercentCompleted)
-      "amountCompleted" ## textSplice (tshow . statusAmountCompleted)
-      "amountTotal" ## textSplice (tshow . statusAmountTotal)
+    MS.mapV pureSplice $ do
+      "startTime" MS.## textSplice (tshow . statusStartTime)
+      "endTime" MS.## textSplice (tshow . statusTimestamp)
+      "jobState" MS.## textSplice (tshow . statusJobState )
+      "percentCompleted" MS.## textSplice (tshow . statusPercentCompleted)
+      "amountCompleted" MS.## textSplice (tshow . statusAmountCompleted)
+      "amountTotal" MS.## textSplice (tshow . statusAmountTotal)
 
 
 ------------------------------------------------------------------------------

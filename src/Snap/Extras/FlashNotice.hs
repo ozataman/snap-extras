@@ -15,6 +15,7 @@ module Snap.Extras.FlashNotice
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
+import qualified Data.Map.Syntax      as MS
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Text            (Text)
@@ -37,8 +38,8 @@ initFlashNotice
     :: HasHeist b
     => Snaplet (Heist b) -> SnapletLens b SessionManager -> Initializer b v ()
 initFlashNotice h session = do
-    let splices = ("flash" ## flashSplice session)
-        csplices = ("flash" ## flashCSplice session)
+    let splices = ("flash" MS.## flashSplice session)
+        csplices = ("flash" MS.## flashCSplice session)
     addConfig h $ mempty & scCompiledSplices .~ csplices
                          & scInterpretedSplices .~ splices
 
@@ -82,8 +83,8 @@ flashSplice session = do
       Just msg' -> do
         lift $ withTop session $ deleteFromSession k >> commitSession
         callTemplateWithText "_flash" $ do
-             "type" ## typ'
-             "message" ## msg'
+             "type" MS.## typ'
+             "message" MS.## msg'
 
 
 -------------------------------------------------------------------------------
@@ -98,8 +99,8 @@ flashCSplice session = do
         k = T.concat ["_", typ]
         getVal = lift $ withTop session $ getFromSession k
         ss = do
-          "type" ## return $ C.yieldPureText typ
-          "message" ## return $ C.yieldRuntimeText
+          "type" MS.## return $ C.yieldPureText typ
+          "message" MS.## return $ C.yieldRuntimeText
                               $ liftM (fromMaybe "Flash notice cookie error")
                                 getVal
     flashTemplate <- C.withLocalSplices ss mempty (C.callTemplate "_flash")

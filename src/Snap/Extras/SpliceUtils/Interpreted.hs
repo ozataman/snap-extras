@@ -14,8 +14,8 @@ module Snap.Extras.SpliceUtils.Interpreted
 -------------------------------------------------------------------------------
 import           Control.Monad
 import           Control.Monad.Trans
-import           Control.Monad.Trans.Class
 import qualified Data.Configurator              as C
+import qualified Data.Map.Syntax                as MS
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as T
@@ -33,8 +33,8 @@ import           Text.XmlHtml
 -- | A list of splices offered in this module
 utilSplices :: Splices (SnapletISplice b)
 utilSplices = do
-  "rqparam" ## paramSplice
-  "refererLink" ## refererSplice
+  "rqparam" MS.## paramSplice
+  "refererLink" MS.## refererSplice
 
 
 refererSplice :: MonadSnap m => Splice m
@@ -51,7 +51,7 @@ paramSplice = do
   at <- liftM (getAttribute "name") getParamNode
   val <- case at of
     Just at' -> lift . getParam $ T.encodeUtf8 at'
-    Nothing -> return Nothing
+    Nothing  -> return Nothing
   return $ maybe [] ((:[]) . TextNode . T.decodeUtf8) val
 
 
@@ -64,7 +64,7 @@ paramSplice = do
 --
 -- > heistLocal runTextAreas $ render "joo/index"
 runTextAreas :: Monad m => HeistState m -> HeistState m
-runTextAreas = bindSplices ("textarea" ## ta)
+runTextAreas = bindSplices ("textarea" MS.## ta)
  where
    ta = do
      hs <- getHS
@@ -92,16 +92,16 @@ selectSplice
     -> Splice m
 selectSplice nm fid xs defv =
     callTemplate "_select" $ do
-      "options" ## opts
-      "name" ## textSplice nm
-      "id" ## textSplice fid
+      "options" MS.## opts
+      "name" MS.## textSplice nm
+      "id" MS.## textSplice fid
     where
       opts = mapSplices gen xs
       gen (val,txt) = runChildrenWith $ do
-        "val" ## textSplice val
-        "text" ## textSplice txt
-        "ifSelected" ## ifISplice $ maybe False (== val) defv
-        "ifNotSelected" ## ifISplice $ maybe True (/= val) defv
+        "val" MS.## textSplice val
+        "text" MS.## textSplice txt
+        "ifSelected" MS.## ifISplice $ maybe False (== val) defv
+        "ifNotSelected" MS.## ifISplice $ maybe True (/= val) defv
 
 
 ------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Snap.Extras.JSON
-    ( 
+    (
     -- * Parsing JSON from Request Body
       getBoundedJSON
     , getJSON
@@ -13,7 +13,7 @@ module Snap.Extras.JSON
     -- * Sending JSON Data
     , writeJSON
     ) where
-    
+
 
 -------------------------------------------------------------------------------
 import           Data.Aeson            as A
@@ -37,7 +37,7 @@ reqJSON = reqBoundedJSON 50000
 -- | Demand the presence of JSON in the body with a size up to N
 -- bytes. If parsing fails for any reson, request is terminated early
 -- and a server error is returned.
-reqBoundedJSON 
+reqBoundedJSON
     :: (MonadSnap m, FromJSON a)
     => Int64
     -- ^ Maximum size in bytes
@@ -58,13 +58,13 @@ getJSON = getBoundedJSON 50000
 
 -------------------------------------------------------------------------------
 -- | Parse request body into JSON or return an error string.
-getBoundedJSON 
-    :: (MonadSnap m, FromJSON a) 
-    => Int64 
+getBoundedJSON
+    :: (MonadSnap m, FromJSON a)
+    => Int64
     -- ^ Maximum size in bytes
     -> m (Either String a)
 getBoundedJSON n = do
-  bodyVal <- A.decode `fmap` readRequestBody n
+  bodyVal <- A.decode `fmap` readRequestBody (fromIntegral n)
   return $ case bodyVal of
     Nothing -> Left "Can't find JSON data in POST body"
     Just v -> case A.fromJSON v of
@@ -74,7 +74,7 @@ getBoundedJSON n = do
 
 -------------------------------------------------------------------------------
 -- | Get JSON data from the given Param field
-getJSONField 
+getJSONField
     :: (MonadSnap m, FromJSON a)
     => B.ByteString
     -> m (Either String a)
@@ -85,7 +85,7 @@ getJSONField fld = do
     Just val' ->
       case A.decode (LB.fromChunks . return $ val') of
         Nothing -> Left $ "Can't decode JSON data in field " ++ B.unpack fld
-        Just v -> 
+        Just v ->
           case A.fromJSON v of
             A.Error e -> Left e
             A.Success a -> Right a
@@ -93,7 +93,7 @@ getJSONField fld = do
 
 -------------------------------------------------------------------------------
 -- | Force the JSON value from field. Similar to 'getJSONField'
-reqJSONField 
+reqJSONField
     :: (MonadSnap m, FromJSON a)
     => B.ByteString
     -> m a

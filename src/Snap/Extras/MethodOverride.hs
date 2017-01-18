@@ -6,7 +6,7 @@ module Snap.Extras.MethodOverride
     ) where
 
 -------------------------------------------------------------------------------
-import           Control.Applicative
+import           Control.Applicative  as A
 import           Data.ByteString      (ByteString)
 import           Data.CaseInsensitive (mk, original)
 import           Data.Maybe           (fromMaybe)
@@ -47,7 +47,7 @@ methodOverride param r
   | otherwise          = r
   where
     overridden = fromMaybe POST $ do
-      meth <- mk <$> (headMay =<< rqParam param r)
+      meth <- mk A.<$> (headMay =<< rqParam param r)
       case meth of
        "HEAD"    -> Just HEAD
        "POST"    -> Just POST

@@ -12,14 +12,15 @@ module Snap.Extras.SpliceUtils.Compiled
 import           Blaze.ByteString.Builder.ByteString
 import           Control.Monad
 import           Control.Monad.Trans
+import qualified Data.Map.Syntax                     as MS
 import           Data.Monoid
-import qualified Data.Text                 as T
-import qualified Data.Text.Encoding        as T
-import           Snap.Core
-import qualified Snap.Extras.SpliceUtils.Interpreted as I
+import qualified Data.Text                           as T
+import qualified Data.Text.Encoding                  as T
 import           Heist
 import           Heist.Compiled
 import           Heist.Compiled.LowLevel
+import           Snap.Core
+import qualified Snap.Extras.SpliceUtils.Interpreted as I
 import           Text.XmlHtml
 import           Text.XmlHtml.Cursor
 -------------------------------------------------------------------------------
@@ -27,8 +28,8 @@ import           Text.XmlHtml.Cursor
 
 utilSplices :: MonadSnap m => Splices (Splice m)
 utilSplices = do
-    "rqparam" ## paramSplice
-    "refererLink" ## refererCSplice
+    "rqparam" MS.## paramSplice
+    "refererLink" MS.## refererCSplice
 
 
 refererCSplice :: MonadSnap m => Splice m
@@ -98,10 +99,10 @@ fancyLoopSplice splices action = do
     p <- newEmptyPromise
 
     let splices' = do
-          mapV ($ getPromise p) splices
-          "prelude" ## return mempty
-          "interlude" ## return mempty
-          "postlude" ## return mempty
+          MS.mapV ($ getPromise p) splices
+          "prelude" MS.## return mempty
+          "interlude" MS.## return mempty
+          "postlude" MS.## return mempty
 
     preChunks <- findNamedChild n "prelude"
     interChunks <- findNamedChild n "interlude"

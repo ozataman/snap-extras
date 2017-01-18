@@ -4,7 +4,6 @@ module Snap.Extras.SpliceUtils.Common where
 import           Control.Monad.Trans
 import qualified Data.Foldable         as F
 import           Data.List
-import           Snap
 import           System.Directory.Tree
 import           System.FilePath
 -------------------------------------------------------------------------------
