@@ -98,13 +98,14 @@ routes = [ ("startJob", startlongjob)
          ]
 
 appInit = makeSnaplet "app" "blah" Nothing $ do
-    h <- nestSnaplet "" heist $ heistInit' "" $ mempty
-        { hcLoadTimeSplices = defaultLoadTimeSplices
-        , hcCompiledSplices = splices
-        }
+    h <- nestSnaplet "" heist $ heistInit' "" hc
     addRoutes routes
     ref <- liftIO $ newIORef emptyJobRepo
     return $ App h ref
+  where
+    hc = emptyHeistConfig
+      & hcLoadTimeSplices .~ defaultLoadTimeSplices
+      & hcCompiledSplices .~ splices
 
 main :: IO ()
 main = do
@@ -151,5 +152,3 @@ getMyJobStatus = do
     return $ do
         jobId <- fromBS =<< mjidbs
         M.lookup jobId (repoJobs repo)
-
-
