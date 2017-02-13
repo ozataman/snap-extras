@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.11.0.2
+Version:             0.12.0.0
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description:         This package contains a collection of helper functions
                      that come in handy in most practical, real-world
@@ -13,7 +13,9 @@ Maintainer:          oz@soostone.com
 Category:            Web, Snap
 Build-type:          Simple
 Cabal-version:       >= 1.10
-
+Extra-source-files:
+  README.md
+  changelog.md
 
 data-files:
   resources/templates/*.tpl
