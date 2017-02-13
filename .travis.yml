@@ -5,13 +5,12 @@ addons:
     packages:
     - libgmp-dev
 env:
-- ARGS="--resolver=lts-2"
-- ARGS="--resolver=lts-3"
-- ARGS="--resolver=lts-4"
-- ARGS="--resolver=lts-5"
-- ARGS="--resolver=lts-6"
+- ARGS="--resolver=lts-7"
 - ARGS="--resolver=lts-8"
-- ARGS="--resolver=nightly"
+
+matrix:
+  allow_failures:
+    - env: ARGS="--resolver=nightly"
 
 before_install:
 # Download and unpack the stack executable

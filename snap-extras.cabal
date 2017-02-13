@@ -67,8 +67,8 @@ Library
     , pcre-light               >= 0.4   && < 0.5
     , readable                 >= 0.1   && < 0.4
     , safe                     >= 0.3   && < 0.4
-    , snap                     >= 0.13  && < 1.1
-    , snap-core                >= 0.7   && < 1.1
+    , snap                     >= 0.9  && < 1.1
+    , snap-core                >= 0.9   && < 1.1
     , text                     >= 0.11  && < 1.3
     , time                     >= 1.4   && < 1.7
     , transformers             >= 0.2   && < 0.6
