@@ -5,8 +5,10 @@ addons:
     packages:
     - libgmp-dev
 env:
-- ARGS="--resolver=lts-7"
-- ARGS="--resolver=lts-8"
+  matrix:
+    - ARGS="--resolver=lts-7"
+    - ARGS="--resolver=lts-8"
+    - env: ARGS="--resolver=nightly"
 
 matrix:
   allow_failures:
