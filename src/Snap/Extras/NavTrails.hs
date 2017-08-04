@@ -10,7 +10,7 @@ import           Control.Monad.State.Strict
 import           Data.ByteString                     (ByteString)
 import qualified Data.Map.Syntax                     as MS
 import           Data.Maybe
-import           Data.Monoid
+import           Data.Monoid                         (mempty)
 import           Data.Text                           (Text)
 import qualified Data.Text.Encoding                  as T
 import           Heist

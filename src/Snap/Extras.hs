@@ -15,7 +15,7 @@ module Snap.Extras
 
 -------------------------------------------------------------------------------
 import           Control.Lens
-import           Data.Monoid
+import           Data.Monoid                         (mempty)
 import           Heist
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist

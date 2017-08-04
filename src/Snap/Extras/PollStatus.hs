@@ -89,16 +89,15 @@ module Snap.Extras.PollStatus
   ) where
 
 ------------------------------------------------------------------------------
-import           Blaze.ByteString.Builder
 import qualified Blaze.ByteString.Builder.Char8 as BB
-import           Control.Applicative
+import           Control.Applicative            as A
 import           Control.Monad
 import           Control.Monad.Trans
 import           Control.Monad.Trans.Maybe
 import           Data.ByteString                (ByteString)
 import qualified Data.Map.Syntax                as MS
 import           Data.Maybe
-import           Data.Monoid
+import           Data.Monoid                    (mempty)
 import           Data.Readable
 import           Data.Text
 import qualified Data.Text                      as T
@@ -107,7 +106,6 @@ import           Heist
 import           Heist.Compiled
 import           Heist.Splices
 import           Language.Javascript.JMacro
-import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist.Compiled    (HasHeist)
 import           Text.PrettyPrint.Leijen.Text   (renderOneLine)
@@ -275,6 +273,6 @@ statusSplices = do
 ------------------------------------------------------------------------------
 statusElapsed :: Status -> Maybe Int
 statusElapsed Status{..} =
-    round . diffUTCTime statusTimestamp <$> statusStartTime
+    round . diffUTCTime statusTimestamp A.<$> statusStartTime
 
 

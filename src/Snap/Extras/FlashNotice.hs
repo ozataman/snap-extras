@@ -17,7 +17,7 @@ import           Control.Monad
 import           Control.Monad.Trans
 import qualified Data.Map.Syntax      as MS
 import           Data.Maybe
-import           Data.Monoid
+import           Data.Monoid          (mempty)
 import           Data.Text            (Text)
 import qualified Data.Text            as T
 import           Heist
