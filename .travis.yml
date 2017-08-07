@@ -25,8 +25,8 @@ before_install:
 # around some quirks in Travis's terminal implementation.
 script:
   - stack $ARGS setup
-  - stack $ARGS test --no-terminal --haddock --no-haddock-deps
-  - stack $ARGS build
+  - stack $ARGS build --fast
+  - stack $ARGS test
   - stack $ARGS sdist
 
 # Caching so the next build will be fast too.
