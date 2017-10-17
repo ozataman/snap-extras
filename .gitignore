@@ -5,3 +5,4 @@ dist
 *.swp
 TAGS
 poll-example/log
+.stack-work/
