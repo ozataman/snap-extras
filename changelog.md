@@ -1,3 +1,6 @@
+0.12.1.1
+* Add missing test suite files to package.
+
 0.12.1.0
 * Backwards compatibility fixes for versions of base < 4.8.
 
