@@ -114,6 +114,9 @@ Test-Suite test
   Main-Is: Main.hs
   Ghc-Options: -threaded -rtsopts -O0
   Default-Language: Haskell2010
+  Other-Modules:
+    Snap.Extras.Tests.Arbitrary
+    Snap.Extras.Tests.MethodOverride
   Hs-Source-Dirs:
     test/src
   Build-Depends:
