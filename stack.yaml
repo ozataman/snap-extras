@@ -1,13 +1,18 @@
-resolver: lts-8.0
+resolver: lts-11.16
 packages:
   - '.'
 flags:
   snap-extras:
     "Examples": true
 extra-deps:
-  - digestive-functors-0.8.2.0
-  - digestive-functors-heist-0.8.7.0
+  - digestive-functors-0.8.3.0
+  - digestive-functors-heist-0.8.8.0
   - digestive-functors-snap-0.7.0.0
-  - heist-1.0.1.0
+  - snap-1.0.0.2
+  - heist-1.0.1.2
   - map-syntax-0.2.0.2
-  - snap-1.0.0.1
+  - lens-4.15.4
+  - free-4.12.4
+  - profunctors-5.2.2
+  - th-abstraction-0.2.8.0
+  - xmlhtml-0.2.5.2
