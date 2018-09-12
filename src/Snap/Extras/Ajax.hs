@@ -17,19 +17,22 @@
 module Snap.Extras.Ajax
     ( replaceWith
     , replaceWithTemplate
+    , jmacroToByteString
     , ResponseType (..)
     , respond
     , responds
     , htmlOrAjax
+    , respondAjax
     ) where
 
 -------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder
-import           Control.Applicative        as A
-import           Data.ByteString.Char8      (ByteString)
-import qualified Data.ByteString.Char8      as B
-import           Data.Text                  (Text)
-import qualified Data.Text                  as T
+import           Control.Applicative          as A
+import           Data.ByteString.Char8        (ByteString)
+import qualified Data.ByteString.Char8        as B
+import           Data.Text                    (Text)
+import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as T
 import           Heist.Compiled
 import           Language.Javascript.JMacro
 import           Safe
@@ -37,6 +40,7 @@ import           Snap.Core
 import           Snap.Extras.CoreUtils
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import qualified Text.PrettyPrint.Leijen.Text as PP
 -------------------------------------------------------------------------------
 
 
@@ -48,22 +52,23 @@ replaceWith
     -> ByteString
     -- ^ content blob
     -> m ()
-replaceWith selector bs = do
-    let bs' = B.unpack bs
-        sel = T.unpack selector
+replaceWith sel bs = do
     jsResponse
-    writeBS $ B.pack $ show . renderJs $ replaceWithJs bs' sel
+    writeBS $ jmacroToByteString $ replaceWithJs bs sel
 
 
 -- | Produce JS statement to replace a target's inner with given
 -- contents.
-replaceWithJs :: String -> String -> JStat
+replaceWithJs :: ByteString -> Text -> JStat
 replaceWithJs bs sel = [jmacro|
-    var contents = `(bs)`;
+    var contents = `(T.decodeUtf8 bs)`;
     var replaceJs = function() { $(`(sel)`).html(contents); };
     replaceJs();
 |]
 
+-- | Converts JMacro-generated Javascript code to a @ByteString@.
+jmacroToByteString :: JStat -> ByteString
+jmacroToByteString = T.encodeUtf8 . PP.displayTStrict . PP.renderCompact . renderJs
 
 -------------------------------------------------------------------------------
 -- | Replace the inner HTML element of a given selector with the
@@ -124,4 +129,6 @@ htmlOrAjax f g = respond $ \ ty -> case ty of
     Html -> f
     Ajax -> g
 
-
+-- | Responding only to AJAX requests.
+respondAjax :: MonadSnap m => m () -> m ()
+respondAjax = htmlOrAjax pass
