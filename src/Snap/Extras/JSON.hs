@@ -55,6 +55,11 @@ reqBoundedJSON n = do
 getJSON :: (MonadSnap m, A.FromJSON a) => m (Either String a)
 getJSON = getBoundedJSON 50000
 
+-------------------------------------------------------------------------------
+-- | Try to parse request body as a generic JSON @Object@ with a default max size of
+-- 50000.
+getJSON' :: (MonadSnap m) => m (Either String Object)
+getJSON' = getBoundedJSON' 50000
 
 -------------------------------------------------------------------------------
 -- | Parse request body into JSON or return an error string.
@@ -70,6 +75,19 @@ getBoundedJSON n = do
     Just v -> case A.fromJSON v of
                 A.Error e -> Left e
                 A.Success a -> Right a
+
+-------------------------------------------------------------------------------
+-- | Parse request body into a generic JSON @Object@ or return an error string.
+getBoundedJSON'
+    :: (MonadSnap m)
+    => Int64
+    -- ^ Maximum size in bytes
+    -> m (Either String Object)
+getBoundedJSON' n = do
+  bodyVal <- A.decode `fmap` readRequestBody (fromIntegral n)
+  return $ case bodyVal of
+    Nothing -> Left $ "Can't find JSON data in POST body"
+    Just v -> Right v
 
 
 -------------------------------------------------------------------------------
