@@ -40,7 +40,7 @@ import           Snap.Snaplet.Heist
 -------------------------------------------------------------------------------
 
 
--- | Replace innerHTML of given selector with given conntent.
+-- | Replace innerHTML of given selector with given content.
 replaceWith
     :: MonadSnap m
     => Text
