@@ -4,8 +4,8 @@
 module Snap.Extras.JSON
     (
     -- * Parsing JSON from Request Body
-      getBoundedJSON
-    , getJSON
+      getBoundedJSON,getBoundedJSON'
+    , getJSON,getJSON'
     , reqBoundedJSON
     , reqJSON
     , getJSONField
