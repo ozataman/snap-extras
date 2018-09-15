@@ -17,6 +17,7 @@
 module Snap.Extras.Ajax
     ( replaceWith
     , replaceWithTemplate
+    , replaceWithTemplateWithSplices
     , jmacroToByteString
     , ResponseType (..)
     , respond
