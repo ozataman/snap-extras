@@ -17,30 +17,41 @@
 module Snap.Extras.Ajax
     ( replaceWith
     , replaceWithTemplate
+    , replaceWithTemplateWithSplices
+    , jmacroToByteString
     , ResponseType (..)
     , respond
     , responds
     , htmlOrAjax
+    , respondAjax
     ) where
 
 -------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder
-import           Control.Applicative        as A
-import           Data.ByteString.Char8      (ByteString)
-import qualified Data.ByteString.Char8      as B
-import           Data.Text                  (Text)
-import qualified Data.Text                  as T
+import           Control.Monad
+import           Control.Applicative          as A
+import           Data.ByteString.Char8        (ByteString)
+import qualified Data.ByteString.Char8        as B
+import qualified Data.ByteString.Lazy as BL
+import           Data.Text                    (Text)
+import qualified Data.Text                    as T
+import qualified Data.Text.Encoding           as T
 import           Heist.Compiled
+import qualified Heist.Interpreted as I
+import           Heist.Splices
+import           Heist
 import           Language.Javascript.JMacro
 import           Safe
 import           Snap.Core
 import           Snap.Extras.CoreUtils
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import qualified Text.PrettyPrint.Leijen.Text as PP
+import qualified Text.XmlHtml as H
 -------------------------------------------------------------------------------
 
 
--- | Replace innerHTML of given selector with given conntent.
+-- | Replace innerHTML of given selector with given content.
 replaceWith
     :: MonadSnap m
     => Text
@@ -48,22 +59,23 @@ replaceWith
     -> ByteString
     -- ^ content blob
     -> m ()
-replaceWith selector bs = do
-    let bs' = B.unpack bs
-        sel = T.unpack selector
+replaceWith sel bs = do
     jsResponse
-    writeBS $ B.pack $ show . renderJs $ replaceWithJs bs' sel
+    writeBS $ jmacroToByteString $ replaceWithJs bs sel
 
 
 -- | Produce JS statement to replace a target's inner with given
 -- contents.
-replaceWithJs :: String -> String -> JStat
+replaceWithJs :: ByteString -> Text -> JStat
 replaceWithJs bs sel = [jmacro|
-    var contents = `(bs)`;
+    var contents = `(T.decodeUtf8 bs)`;
     var replaceJs = function() { $(`(sel)`).html(contents); };
     replaceJs();
 |]
 
+-- | Converts JMacro-generated Javascript code to a @ByteString@.
+jmacroToByteString :: JStat -> ByteString
+jmacroToByteString = T.encodeUtf8 . PP.displayTStrict . PP.renderCompact . renderJs
 
 -------------------------------------------------------------------------------
 -- | Replace the inner HTML element of a given selector with the
@@ -84,7 +96,24 @@ replaceWithTemplate nm sel = do
     bld' <- withTop' id bld
     replaceWith sel (toByteString bld')
 
-
+-- | Same as @replaceWithTemplate@, but takes additional splices to render the template.
+replaceWithTemplateWithSplices
+    :: HasHeist b
+    => Splices (I.Splice (Handler b b))
+    -- ^ bound splices
+    -> ByteString
+    -- ^ Heist template name
+    -> Text
+    -- ^ jQuery selector for target element on page
+    -> Handler b v ()
+replaceWithTemplateWithSplices splices nm sel = do
+    doc <- withHeistState $ \ hs -> do
+        mb <- I.renderTemplateToDoc (I.bindSplices splices hs) nm
+        case mb of
+          Nothing -> badReq "Could not render a response." 
+          Just doc -> return doc
+    bs' <- liftM (BL.toStrict . toLazyByteString . H.renderHtmlFragment H.UTF8 . H.docContent) $ withTop' id doc
+    replaceWith sel bs'
 
 -------------------------------------------------------------------------------
 -- | Possible reponse types we support at the moment. Can be expanded
@@ -124,4 +153,6 @@ htmlOrAjax f g = respond $ \ ty -> case ty of
     Html -> f
     Ajax -> g
 
-
+-- | Responding only to AJAX requests.
+respondAjax :: MonadSnap m => m () -> m ()
+respondAjax = htmlOrAjax pass
