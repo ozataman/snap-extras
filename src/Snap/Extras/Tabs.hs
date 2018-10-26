@@ -76,7 +76,9 @@ tabsCSplice = do
 -- attributes in order to get ${} splice substitution.
 tabCSplice :: Monad m => RuntimeSplice m Text -> C.Splice m
 tabCSplice getCtx = do
-    (Element _ attrs ch) <- getParamNode
+    e <- getParamNode
+    -- TODO Incomplete pattern matching!
+    let (Element _ attrs ch) = e
     attrsAction <- C.runAttributesRaw attrs
     nodes <- C.codeGen `fmap` C.runNodeList ch
     let ps as context = do

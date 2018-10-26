@@ -68,7 +68,9 @@ runTextAreas = bindSplices ("textarea" MS.## ta)
  where
    ta = do
      hs <- getHS
-     n@(Element t ats _) <- getParamNode
+     n <- getParamNode
+     -- TODO Incomplete pattern matching.
+     let (Element t ats _) = n
      let nm = nodeText n
      case lookupSplice nm hs of
        Just spl -> do
@@ -146,7 +148,9 @@ scriptsSplice d prefix = do
 -- > beta-functions-enabled = true
 ifFlagSplice :: SnapletISplice b
 ifFlagSplice = do
-  Element _ ats es <- getParamNode
+  e <- getParamNode
+  -- TODO Incomplete pattern matching!
+  let (Element _ ats es) = e
   conf <- lift getSnapletUserConfig
   case lookup "ref" ats of
     Nothing -> return []
