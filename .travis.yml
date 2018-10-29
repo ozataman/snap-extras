@@ -29,6 +29,7 @@ before_install:
 # around some quirks in Travis's terminal implementation.
 script:
   - travis_retry stack $ARGS setup
+  - travis_retry stack test --only-dependencies
   - stack $ARGS build --fast
   - stack $ARGS test
   - stack $ARGS sdist
