@@ -1,3 +1,6 @@
+0.12.2.1
+* Refactor in a few views to keep compatibility with MonadFail changes.
+
 0.12.2.0
 * Loosen dependencies.
 
