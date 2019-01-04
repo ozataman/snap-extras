@@ -14,6 +14,7 @@ module Snap.Extras.SpliceUtils.Interpreted
 -------------------------------------------------------------------------------
 import           Control.Monad
 import           Control.Monad.Trans
+import           Control.Monad.Fail
 import qualified Data.Configurator              as C
 import qualified Data.Map.Syntax                as MS
 import           Data.Text                      (Text)
@@ -63,7 +64,7 @@ paramSplice = do
 -- by putting the name of a splice as the value of a textarea tag.
 --
 -- > heistLocal runTextAreas $ render "joo/index"
-runTextAreas :: Monad m => HeistState m -> HeistState m
+runTextAreas :: (MonadFail m) => HeistState m -> HeistState m
 runTextAreas = bindSplices ("textarea" MS.## ta)
  where
    ta = do
