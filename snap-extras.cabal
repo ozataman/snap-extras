@@ -1,5 +1,5 @@
 Name:                snap-extras
-Version:             0.12.2.1
+Version:             0.12.3.0
 Synopsis:            A collection of useful helpers and utilities for Snap web applications.
 Description:         This package contains a collection of helper functions
                      that come in handy in most practical, real-world

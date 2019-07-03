@@ -1,3 +1,6 @@
+0.12.3.0
+* Remove upper bounds on dependencies.
+
 0.12.2.1
 * Refactor in a few views to keep compatibility with MonadFail changes.
 
