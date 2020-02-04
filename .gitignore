@@ -6,3 +6,4 @@ dist
 TAGS
 poll-example/log
 .stack-work/
+stack.yaml.lock
