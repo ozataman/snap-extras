@@ -1,3 +1,6 @@
+0.12.3.1
+* GHC 9.6 and Lens 5 compatibility [#29](https://github.com/ozataman/snap-extras/pull/29)
+
 0.12.3.0
 * Remove upper bounds on dependencies.
 
