@@ -20,7 +20,7 @@ import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
-
+import           Control.Monad
 
 -------------------------------------------------------------------------------
 data NavTrail b = NavTrail {

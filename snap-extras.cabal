@@ -64,7 +64,7 @@ Library
     , filepath                 >= 1.1
     , heist                    >= 0.14
     , jmacro                   >= 0.6
-    , lens                     < 5
+    , lens                     < 6
     , mtl                      >= 2.0
     , pcre-light               >= 0.4
     , readable                 >= 0.1
