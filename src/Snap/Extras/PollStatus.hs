@@ -186,11 +186,11 @@ updateJS
     -> Int
     -- ^ The amount of time to wait before requesting the page in milliseconds
     -> Text
-updateJS url delay = T.pack $ show $ renderOneLine $ renderJs $
+updateJS url delay = T.pack $ Prelude.show $ renderOneLine $ renderJs $
     [jmacro|
       setTimeout(function() {
         $.get(`(T.unpack url)`);
-      }, `(show delay)`);
+      }, `(Prelude.show delay)`);
     |]
 
 
@@ -243,7 +243,7 @@ statusPercentCompleted Status{..} =
 
 ------------------------------------------------------------------------------
 tshow :: Show a => a -> Text
-tshow = T.pack . show
+tshow = T.pack . Prelude.show
 
 
 ------------------------------------------------------------------------------
