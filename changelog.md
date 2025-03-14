@@ -1,3 +1,6 @@
+0.12.3.2
+* GHC 9.12 compatibility [#30](https://github.com/ozataman/snap-extras/pull/30)
+
 0.12.3.1
 * GHC 9.6 and Lens 5 compatibility [#29](https://github.com/ozataman/snap-extras/pull/29)
 
